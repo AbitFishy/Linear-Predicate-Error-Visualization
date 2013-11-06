@@ -12,10 +12,10 @@ ColorScreen cs;
 void setup(){
   size(480,480); 
   stroke(0);
-  background(255);
+  background(128);
   
-  P1 = new Point(100,250);
-  P2 = new Point(100,100);
+  P1 = new Point(50,50);
+  P2 = new Point(300,300);
   dl = new DrawLine(P1,P2);
   
   above = color(255,0,0);
@@ -166,7 +166,8 @@ class LinesideTest{
 
   private int DET(Point p1, Point p2, Point p3)
   {
-    return sign( (p1.getX()*p2.getY() - p1.getY()*p2.getX()) + (p2.getX()*p3.getY() - p3.getX()*p2.getY()) + (p1.getX()*p3.getY() - p3.getX()*p1.getY()));
+    //return sign( (p1.getX()*p2.getY() - p1.getY()*p2.getX()) + (p2.getX()*p3.getY() - p3.getX()*p2.getY()) + (p1.getX()*p3.getY() - p3.getX()*p1.getY()));
+    return sign( (p1.getX()*(p2.getY()-p3.getY())) + (p2.getX()*(p3.getY()-p1.getY())) + (p3.getX()*(p1.getY()-p2.getY())) );
   }
 }
 
