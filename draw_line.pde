@@ -1,20 +1,46 @@
-GraphScreen gs;
-
 Point P1;
 Point P2;
 
 DrawLine dl;
 
+color above;
+color linear;
+color below;
+
+ColorScreen cs;
+
 void setup(){
-  gs = new GraphScreen(5,96,96);
-  size(gs.getScreenH(),gs.getScreenW()); //also include the text fields in future
+  size(480,480); 
   stroke(0);
   background(255);
   
   P1 = new Point(100,350);
   P2 = new Point(400,300);
   dl = new DrawLine(P1,P2);
+  
+  above = color(255,0,0);
+  linear = color(0,255,0);
+  below = color(0,0,0);
+  
+  cs = new ColorScreen();
+  cs.addPoint(P1);
+  cs.addPoint(P2);
+  
+  int t = 0;
+  boolean s;
+  cs.colorize();
+  
+   stroke(0);
+  dl.draw();
+  stroke(0,0,0);
+  point(P1.getX(),P1.getY());
+  point(P2.getX(),P2.getY());
 }
+
+void draw(){
+
+}
+
 
 class Point{
   private float m_X;
@@ -23,6 +49,11 @@ class Point{
     m_X = x;
     m_Y = y;
   }
+  Point(){
+    m_X = 0;
+    m_Y = 0;
+  }
+  
   float getX()
   {
     return m_X;
@@ -91,49 +122,87 @@ class DrawLine{          //todo: find which point the interects are closest too 
   }
 }
 
+class LinesideTest{
+  private Point m_pt1;
+  private Point m_pt2;
+  
+  public LinesideTest(Point p1, Point p2){
+    m_pt1 = p1;
+    m_pt2 = p2;
+  }
+  
+  public int testPoint(Point tp){
+    return DET(m_pt1,m_pt2,tp);
+  }
 
-class GraphScreen{
-  //The boxes here are abstact pixels, all points scale to fit one box
-  int m_boxDim; //in number of pixels
-  int m_boxesH;
-  int m_boxesW;
-  
-  int m_screenH;
-  int m_screenW;
-  
-  int[][] m_boxes;
-  
-  public GraphScreen(int bd, int bh, int bw){
-    m_boxDim = bd;
-    m_boxesH = bh;
-    m_boxesW = bw;
-    
-    m_screenH = m_boxDim * m_boxesH;
-    m_screenW = m_boxDim * m_boxesW;
-    
-    m_boxes = new int[m_boxesH][m_boxesW];
+  private int DET(Point p1, Point p2, Point p3)
+  {
+    return sign( (p1.getX()*p2.getY() - p1.getY()*p2.getX()) + (p2.getX()*p3.getY() - p3.getX()*p2.getY()) + (p1.getX()*p3.getY() - p3.getX()*p1.getY()));
   }
-  
-  public int getScreenH(){
-    return m_screenH;
-  }
-  
-  public int getScreenW(){
-    return m_screenW;
-  }
-  
-  
 }
+
+public int sign(float num){
+  if (num > 0)
+  {
+    return 1;
+  }
+  else if (num < 0)
+  {
+    return -1;
+  }
+  else return 0;
+}
+
+class ColorScreen{
+  private ArrayList<Point> m_pts;
+
+  public ColorScreen(){
+    m_pts = new ArrayList<Point>();  
+  }
+  
+  public void addPoint(Point p){
+    m_pts.add(p);
+  }
+  
+  public boolean colorize(){
+    color c;
+    Point p;
+    if (m_pts.size() == 2)
+    {
+      LinesideTest ls = new LinesideTest(m_pts.get(0),m_pts.get(1));
+      for (int i = 0; i < width; i++)
+      {
+        for (int j = 0; j < height; j++)
+        {
+          p = new Point(i,j);
+          int r = ls.testPoint(new Point(i,j));
+          if (r == 1)
+          {
+            c = above;
+          }
+          else if (r == 0)
+          {
+            c = linear;
+          }
+          else
+          {
+            c = below;
+          }
+          
+          stroke(c);
+          point(i,j);
+        }
+      }
+      return true;         
+      
+    }else return false;
+  }
+}
+    
+
   
  
 
-void draw(){
-  stroke(0);
-  dl.draw();
-  stroke(255,0,0);
-  point(P1.getX(),P1.getY());
-  point(P2.getX(),P2.getY());
-}
 
 
 
