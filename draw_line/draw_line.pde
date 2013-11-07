@@ -8,13 +8,16 @@ color linear;
 color below;
 
 ColorScreen cs;
+GraphScreen gs;
 
 void setup(){
-  size(480,480); 
+  gs = new GraphScreen(5,96,96);
+  
+  size(gs.screenSizeH(),gs.screenSizeW()); 
   stroke(0);
   background(128);
   
-  P1 = new Point(50,50);
+  P1 = new Point(0,50);
   P2 = new Point(300,300);
   dl = new DrawLine(P1,P2);
   
@@ -70,8 +73,7 @@ class Point{
   }
 }
 
-class DrawLine{          //todo: find which point the interects are closest too to
-                        // avoid overlapping lines
+class DrawLine{
   private Point m_pt1;
   private Point m_pt2;
   private float m_M;
@@ -199,10 +201,10 @@ class ColorScreen{
     Point p;
     if (m_pts.size() == 2)
     {
-      LinesideTest ls = new LinesideTest(m_pts.get(0),m_pts.get(1));
-      for (int i = 0; i < width; i++)
+      LinesideTest ls = new LinesideTest(gs.pixelToBox(m_pts.get(0)),gs.pixelToBox(m_pts.get(1)));
+      for (int i = 0; i < gs.getWidth(); i++)
       {
-        for (int j = 0; j < height; j++)
+        for (int j = 0; j < gs.getHeight(); j++)
         {
           p = new Point(i,j);
           int r = ls.testPoint(new Point(i,j));
@@ -220,16 +222,80 @@ class ColorScreen{
           }
           
           stroke(c);
-          point(i,j);
+          paintBox(i,j);
         }
       }
       return true;         
       
     }else return false;
   }
+  
+  private void paintBox(int x, int y){
+    Point[] ps = gs.boxToPixels(new Point(x,y));
+    rect(ps[0].getX(),ps[0].getY(),ps[1].getX(),ps[1].getY());
+  }
 }
     
+class GraphScreen{ //also flips the y-axis
+  int m_size; //of box in pixels high and wide
+  int m_height; //number of boxes high the screen is
+  int m_width; // number of boxes wide the screen is
+  
+  public GraphScreen(int size, int h, int w){
+    m_size = size;
+    m_height = h;
+    m_width = w;
+  }
+    
+  public int screenSizeH(){
+    return m_height*m_size;
+  }
+    
+  public int screenSizeW(){
+    return m_width*m_size;
+  }
+  
+  public int getHeight(){
+    return m_height;
+  }
+  public int getWidth(){
+    return m_width;
+  }
+  
+  public Point pixelToBox(Point pixel)
+  {
+    float s = (float)m_size;
+    
+    float x = pixel.getX()/s;
+    float y = (float)m_height - floor(pixel.getY()/s) -1;
+    
+    return new Point(x,y);
+  }
+  
+  public Point[] boxToPixels(Point box){
+    float s = (float)m_size;
+    float h = (float)m_height;
+    
+    Point[] range = new Point[2];
+       
+    //range[0].setX(box.getX() * s);
+    //range[0].setY( (h-box.getY()-1) * s);
 
+   // range[1].setX((box.getX() * s) + s-1);
+    //range[1].setY( ((h-box.getY()) * s) -1 );
+    
+    range[0] = new Point( (box.getX() * s), ( (h-box.getY()-1) * s));
+    range[1] = new Point( ((box.getX() * s) + s-1), ( ((h-box.getY()) * s) -1 ));
+    
+    return range;
+  }
+  
+  public void drawGrid(){
+  }
+    
+    
+
+}
   
  
 
