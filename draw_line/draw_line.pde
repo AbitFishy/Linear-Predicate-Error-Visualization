@@ -10,8 +10,12 @@ color below;
 ColorScreen cs;
 GraphScreen gs;
 
+
+//debuging
+int count = 5;
+
 void setup(){
-  gs = new GraphScreen(5,96,96);
+  gs = new GraphScreen(3,255,255);
   
   size(gs.screenSizeH(),gs.screenSizeW()); 
   stroke(0);
@@ -21,9 +25,9 @@ void setup(){
   P2 = new Point(300,300);
   dl = new DrawLine(P1,P2);
   
-  above = color(255,0,0);
-  linear = color(0,255,0);
-  below = color(0,0,0);
+  above = color(0,0,255);
+  linear = color(255,255,0);
+  below = color(255,0,0);
   
   cs = new ColorScreen();
   cs.addPoint(P1);
@@ -35,7 +39,7 @@ void setup(){
   
    stroke(0);
   dl.draw();
-  stroke(0,0,0);
+  stroke(255,255,255);
   point(P1.getX(),P1.getY());
   point(P2.getX(),P2.getY());
 }
@@ -221,8 +225,9 @@ class ColorScreen{
             c = below;
           }
           
-          stroke(c);
-          paintBox(i,j);
+          //stroke(0);
+          //fill(c);
+          paintBox(i,j,c);
         }
       }
       return true;         
@@ -230,9 +235,23 @@ class ColorScreen{
     }else return false;
   }
   
-  private void paintBox(int x, int y){
-    Point[] ps = gs.boxToPixels(new Point(x,y));
-    rect(ps[0].getX(),ps[0].getY(),ps[1].getX(),ps[1].getY());
+  private void paintBox(int x, int y, color c){
+    //Point[][] ps = gs.boxToPixels(new Point(x,y));
+    //rect(ps[0].getX(),ps[0].getY(),ps[1].getX(),ps[1].getY());
+    //for (int i = 0; i < gs.getBoxSize(); i++){
+   //   for (int j = 0; j < gs.getBoxSize(); j++){
+    //    println(i+"'"+j);
+    //    set((int)(ps[i][j].getX()),(int)(ps[i][j].getY()), c);
+    //  }
+   // }
+      
+      Point[] ps = gs.boxToPixels(new Point(x,y));  
+      
+      for (int i = (int)ps[0].getX(); i <= (int)ps[1].getX(); i++){
+        for (int j = (int)ps[0].getY(); j <= (int)ps[1].getY(); j++){
+          set(i,j,c);
+        }
+      }
   }
 }
     
@@ -261,6 +280,9 @@ class GraphScreen{ //also flips the y-axis
   public int getWidth(){
     return m_width;
   }
+  public int getBoxSize(){
+    return m_size;
+  }
   
   public Point pixelToBox(Point pixel)
   {
@@ -276,7 +298,19 @@ class GraphScreen{ //also flips the y-axis
     float s = (float)m_size;
     float h = (float)m_height;
     
+    //Point[][] range = new Point[m_size][m_size];
     Point[] range = new Point[2];
+    
+   // Point c1 = new Point( ((box.getX() * s) + s-1), ( (h-box.getY()-1) * s));
+   // Point c2 = new Point( (box.getX() * s), ( ((h-box.getY()) * s) -1 ));
+    
+  //  for (int i = 0; i <= c2.getX()-c1.getX(); i++){
+  //     for (int j = 0; j <= c2.getY()-c1.getY(); j++){
+     //    range[i][j] = new Point(c1.getX()+i,c1.getY()+j);
+   //    }
+   // }
+    
+    
        
     //range[0].setX(box.getX() * s);
     //range[0].setY( (h-box.getY()-1) * s);
@@ -284,8 +318,18 @@ class GraphScreen{ //also flips the y-axis
    // range[1].setX((box.getX() * s) + s-1);
     //range[1].setY( ((h-box.getY()) * s) -1 );
     
+    
     range[0] = new Point( (box.getX() * s), ( (h-box.getY()-1) * s));
     range[1] = new Point( ((box.getX() * s) + s-1), ( ((h-box.getY()) * s) -1 ));
+    
+    //debug
+    if (count != 0){
+      println("range[0](x,y) = ("+ range[0].getX() +","+range[0].getY()+")");
+      println("range[1](x,y) = ("+ range[1].getX() +","+range[1].getY()+")\n");
+      count--;
+    }
+    //
+    
     
     return range;
   }
