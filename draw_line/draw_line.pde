@@ -235,16 +235,7 @@ class ColorScreen{
     }else return false;
   }
   
-  private void paintBox(int x, int y, color c){
-    //Point[][] ps = gs.boxToPixels(new Point(x,y));
-    //rect(ps[0].getX(),ps[0].getY(),ps[1].getX(),ps[1].getY());
-    //for (int i = 0; i < gs.getBoxSize(); i++){
-   //   for (int j = 0; j < gs.getBoxSize(); j++){
-    //    println(i+"'"+j);
-    //    set((int)(ps[i][j].getX()),(int)(ps[i][j].getY()), c);
-    //  }
-   // }
-      
+  private void paintBox(int x, int y, color c){     
       Point[] ps = gs.boxToPixels(new Point(x,y));  
       
       for (int i = (int)ps[0].getX(); i <= (int)ps[1].getX(); i++){
@@ -298,27 +289,8 @@ class GraphScreen{ //also flips the y-axis
     float s = (float)m_size;
     float h = (float)m_height;
     
-    //Point[][] range = new Point[m_size][m_size];
     Point[] range = new Point[2];
-    
-   // Point c1 = new Point( ((box.getX() * s) + s-1), ( (h-box.getY()-1) * s));
-   // Point c2 = new Point( (box.getX() * s), ( ((h-box.getY()) * s) -1 ));
-    
-  //  for (int i = 0; i <= c2.getX()-c1.getX(); i++){
-  //     for (int j = 0; j <= c2.getY()-c1.getY(); j++){
-     //    range[i][j] = new Point(c1.getX()+i,c1.getY()+j);
-   //    }
-   // }
-    
-    
-       
-    //range[0].setX(box.getX() * s);
-    //range[0].setY( (h-box.getY()-1) * s);
-
-   // range[1].setX((box.getX() * s) + s-1);
-    //range[1].setY( ((h-box.getY()) * s) -1 );
-    
-    
+ 
     range[0] = new Point( (box.getX() * s), ( (h-box.getY()-1) * s));
     range[1] = new Point( ((box.getX() * s) + s-1), ( ((h-box.getY()) * s) -1 ));
     
