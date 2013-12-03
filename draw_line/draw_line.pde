@@ -1,5 +1,8 @@
+
 Point P1;
 Point P2;
+Point P3;
+Point P4;
 
 DrawLine dl;
 
@@ -10,7 +13,10 @@ color below;
 ColorScreen cs;
 GraphScreen gs;
 
+PointSpace ps;
+Tester test;
 
+ConvexHull ch;
 //debuging
 int count = 5;
 
@@ -21,17 +27,29 @@ void setup(){
   stroke(0);
   background(128);
   
-  P1 = new Point(0,50);
-  P2 = new Point(300,300);
+  ps   = new PointSpace();
+  cs   = new ColorScreen(ps);
+  test = new Tester();
+  ch   = new ConvexHull();
+  
+  above   = color(0,0,255);
+  linear  = color(255,255,0);
+  below   = color(255,0,0);
+  //end setup
+  
+  //testing
+  P1 = new Point(100,50);
+  P2 = new Point(100,100);
+  P3 = new Point(75,200);
+  P4 = new Point(45,235);
   dl = new DrawLine(P1,P2);
   
-  above = color(0,0,255);
-  linear = color(255,255,0);
-  below = color(255,0,0);
-  
-  cs = new ColorScreen();
-  cs.addPoint(P1);
-  cs.addPoint(P2);
+  ps.addPoint(P1);
+  ps.addPoint(P2);
+  ps.addPoint(P3);
+  //ps.addPoint(P4);
+  test.setMode(false,1);
+  test.setPoints(ps.getPoints());
   
   int t = 0;
   boolean s;
@@ -74,6 +92,11 @@ class Point{
   
   void setY(float y){
     m_Y = y;
+  }
+  
+  @Override
+  public String toString(){
+    return new String("("+m_X+","+m_Y+")");
   }
 }
 
@@ -157,7 +180,39 @@ class DrawLine{
   }
 }
 
-class LinesideTest{
+interface OrientTest{
+  public int testPoint(Point p);
+}
+
+class NullTest implements OrientTest{
+  public int testPoint(Point p){
+    return -1;
+  }
+}
+
+public int DET(Point p1, Point p2, Point p3)  {
+  return sign( (p1.getX()*(p2.getY()-p3.getY())) + (p2.getX()*(p3.getY()-p1.getY())) + (p3.getX()*(p1.getY()-p2.getY())) );
+}
+  
+public int DET4(Point p1, Point p2, Point p3, Point tp){
+  float p1x = p1.getX();
+  float p1y = p1.getY();
+  float p2x = p2.getX();
+  float p2y = p2.getY();
+  float p3x = p3.getX();
+  float p3y = p3.getY();
+  float tpx = tp.getX();
+  float tpy = tp.getY();
+  
+  float p1s = p1x*p1x + p1y*p1y;
+  float p2s = p2x*p2x + p2y*p2y;
+  float p3s = p3x*p3x + p3y*p3y;
+  float tps = tpx*tpx + tpy*tpy;
+  return sign( p1x*p2y*p3s  +  p2x*p3y*tps  +  p3x*tpy*p1s  +  tpx*p1y*p2s
+             -(p1s*p2y*p3x) - (p2s*p3y*tpx) - (p3s*tpy*p1x) - (tps*p1y*p2x) );
+}
+
+class LinesideTest implements OrientTest{
   private Point m_pt1;
   private Point m_pt2;
   
@@ -169,14 +224,138 @@ class LinesideTest{
   public int testPoint(Point tp){
     return DET(m_pt1,m_pt2,tp);
   }
+}
 
-  private int DET(Point p1, Point p2, Point p3)
-  {
-    //return sign( (p1.getX()*p2.getY() - p1.getY()*p2.getX()) + (p2.getX()*p3.getY() - p3.getX()*p2.getY()) + (p1.getX()*p3.getY() - p3.getX()*p1.getY()));
-    return sign( (p1.getX()*(p2.getY()-p3.getY())) + (p2.getX()*(p3.getY()-p1.getY())) + (p3.getX()*(p1.getY()-p2.getY())) );
+class InTriangleTest implements OrientTest{
+  private Point m_p1;
+  private Point m_p2;
+  private Point m_p3;
+  
+  public InTriangleTest(Point p1, Point p2, Point p3){
+    m_p1 = p1;
+    m_p2 = p2;
+    m_p3 = p3;
+  }
+  
+  public int testPoint(Point tp){
+    int r1;
+    int r2;
+    int r3;
+    
+    r1 = DET(m_p1,m_p2,tp);
+    r2 = DET(m_p2,m_p3,tp);
+    r3 = DET(m_p3,m_p1,tp);
+    
+    if (r1 == 1 && r2 == 1 && r3 == 1){
+      return 1;
+    }
+    if ( (r1 == 0 && r2 == 1 && r3 == 1) ||
+         (r1 == 1 && r2 == 0 && r3 == 1) ||
+         (r1 == 1 && r2 == 1 && r3 == 0) ){
+           return 0;
+    }
+    return -1;
   }
 }
 
+class InConvexHullTest implements OrientTest{
+  ArrayList<Point> m_pts;
+  
+  int vm;
+  int left;
+  
+  public InConvexHullTest(ArrayList<Point> pts){
+    m_pts = pts;
+    vm = 0;
+    //left;
+  }
+  
+  public int testPoint(Point tp){
+    int vs = 1;
+    int vf = m_pts.size()-1;
+    
+    return whichSide(vs,vf,tp);
+  }
+  
+  private int whichSide(int vs, int vf, Point pt){
+    if (vf-vs == 1){
+      int r1 = DET(m_pts.get(vs),m_pts.get(vf),pt);
+      if (r1 != -1){
+        if (vs == 1){
+          int r2 = DET(m_pts.get(0),m_pts.get(vs),pt);
+          if(r1 == 1 && r2 == 2){
+            return 1;
+          }else if ( (r1 == 1 && r2 == 0) || (r1 == 0 && r2 == 1) ){
+            return 0;
+          }
+        }else if (vf == m_pts.size()-1){
+          int r2 = DET(m_pts.get(vf),m_pts.get(0),pt);
+          if(r1 == 1 && r2 == 2){
+            return 1;
+          }else if ( (r1 == 1 && r2 == 0) || (r1 == 0 && r2 == 1) ){
+            return 0;
+          }
+        }
+      }else return -1;
+    }
+    
+    vm = (vf-vs)/2 +vs;
+    left = DET(m_pts.get(0),m_pts.get(vm),pt);
+    if (left == 1){
+      return whichSide(vm,vf,pt);
+    }
+    else{
+      return whichSide(vs,vm,pt);
+    }
+  }
+}
+    
+class InCircleTest implements OrientTest{
+  private Point m_p1;
+  private Point m_p2;
+  private Point m_p3;
+  private boolean mode; //true: distance test, false raise to the parabola
+  
+  public InCircleTest(Point p1, Point p2){
+    m_p1 = p1;
+    m_p2 = p2;
+    mode = true;
+  }
+  
+  public InCircleTest(Point p1, Point p2, Point p3){
+    m_p1 = p1;
+    m_p2 = p2;
+    m_p3 = p3;
+    mode = false;
+  }
+  
+  public int testPoint(Point tp){
+    if (mode){
+      
+      float x = abs(m_p1.getX()-m_p2.getX());
+      float y = abs(m_p1.getY()-m_p2.getY());
+      float csq1 = x*x + y*y;
+      
+      x = abs(m_p1.getX()-tp.getX());
+      y = abs(m_p1.getY()-tp.getY());
+      float csq2 = x*x + y*y;
+      
+      if (csq1 > csq2){
+        return 1;
+      }
+      else if (csq1 < csq2){
+        return -1;
+      }
+      else{
+        return 0;
+      }
+    }
+    else{
+      return DET4(m_p1,m_p2,m_p3,tp);
+    }
+  }
+}
+  
 public int sign(float num){
   if (num > 0)
   {
@@ -189,50 +368,48 @@ public int sign(float num){
   else return 0;
 }
 
-class ColorScreen{
-  private ArrayList<Point> m_pts;
 
-  public ColorScreen(){
-    m_pts = new ArrayList<Point>();  
+
+class ColorScreen{
+  //private ArrayList<Point> m_pts;
+  private PointSpace m_pts;
+
+  public ColorScreen(PointSpace p){
+    m_pts = p;  
   }
   
-  public void addPoint(Point p){
-    m_pts.add(p);
-  }
+  //public void addPoint(Point p){
+  //  m_pts.add(p);
+  //}
   
   public boolean colorize(){
     color c;
     Point p;
-    if (m_pts.size() == 2)
+    for (int i = 0; i < gs.getWidth(); i++)
     {
-      LinesideTest ls = new LinesideTest(gs.pixelToBox(m_pts.get(0)),gs.pixelToBox(m_pts.get(1)));
-      for (int i = 0; i < gs.getWidth(); i++)
+      for (int j = 0; j < gs.getHeight(); j++)
       {
-        for (int j = 0; j < gs.getHeight(); j++)
+        //p = new Point(i,j);
+        int r = test.testPoint(new Point(i,j));
+        if (r == 1)
         {
-          p = new Point(i,j);
-          int r = ls.testPoint(new Point(i,j));
-          if (r == 1)
-          {
-            c = above;
-          }
-          else if (r == 0)
-          {
-            c = linear;
-          }
-          else
-          {
-            c = below;
-          }
-          
-          //stroke(0);
-          //fill(c);
-          paintBox(i,j,c);
+          c = above;
         }
+        else if (r == 0)
+        {
+          c = linear;
+        }
+        else
+        {
+           c = below;
+        }
+        
+        //stroke(0);
+        //fill(c);
+        paintBox(i,j,c);
       }
-      return true;         
-      
-    }else return false;
+    }
+    return true;
   }
   
   private void paintBox(int x, int y, color c){     
@@ -301,20 +478,264 @@ class GraphScreen{ //also flips the y-axis
       count--;
     }
     //
-    
-    
+
     return range;
   }
   
-  public void drawGrid(){
-  }
+  //public void drawGrid(){
+  //}
     
-    
-
 }
   
- 
 
 
+class PointSpace{
+  ArrayList<Point> m_pts;
+  
+  float m_transX; //translation and scaling from the screen space to point space
+  float m_transY;
+  float m_scale;
+  //distance between boxes?
+  
+  int m_index;
+  
+  public PointSpace(){
+    m_pts = new ArrayList<Point>();
+    m_transX = 0;
+    m_transY = 0;
+    m_scale  = 1;
+    
+    m_index  = 0;
+  }
+  
+  public void addPoint(Point p){
+    float px = p.getX();
+    float py = p.getY();
+    
+    px += m_transX;
+    py += m_transY;
+    
+    p.setX(px);
+    p.setY(py);
+    
+    m_pts.add(p);
+  }
+  
+  public void screenTrans(float x, float y){
+    m_transX += x;
+    m_transY += y;
+  }
+  
+  public void screenScale( float s){
+    m_scale *= s;
+  }
+  
+  public Point getNextPoint(){ //returns in pointspace coordinates
+    return m_pts.get(m_index++);
+  }
+  
+  public Point getNextPointTrans(){ //returns in screen coordinates
+    return m_pts.get(m_index++);
+  }
+  
+  public void resetQueue(){
+    m_index = 0;
+  }
+  
+  public ArrayList<Point> getPoints(){
+    return m_pts;
+  }
+  
+  public int getNumPts(){
+    return m_pts.size();
+  }
+  
+}
 
+class Tester{
+  ArrayList<Point> m_pts;
+  boolean m_mode;  //true:        (default)
+                   //        2 pts: lineside test
+                   //        3 pts: in triangle
+                   //      >=4 pts: in convex hull
+                   //
+                   //false:
+                   //        2 pts: circle originating at pt1 and pt2 is pt on the circle
+                   //        3 pts: circle passing through pts
+                   //      >=4 pts: explode into fire
+  
+  int m_pivot;     //for lineside only for now, maybe
+                   //1: first pt  (default)
+                   //2: 2nd
+                   //3: 3rd
+  OrientTest test;
+  
+  public Tester(){
+    m_pts = new ArrayList<Point>();
+    m_mode = true;
+    m_pivot= 1;
+    
+  }
+  
+  public void setPoints(ArrayList pts){
+    m_pts = pts;
+    int size = m_pts.size();
+    
+    if (size == 1){
+      test = new NullTest();
+    }
+    
+    if (m_mode){
+      switch (size){
+        case 2: test = new LinesideTest(m_pts.get(0),m_pts.get(1));
+                break;
+        case 3: test = new InTriangleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
+                break;
+        default: test = new InConvexHullTest(ch.findConvexHull(m_pts));
+      }
+    }else{
+      switch (size){
+        case 2: test = new InCircleTest(m_pts.get(0),m_pts.get(1));
+                break;
+        case 3: test = new InCircleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
+                break;
+        default: test = new NullTest();
+      }
+    }
+  }
+  
+  public void setMode(boolean mode, int pivot){
+    m_mode = mode;
+    m_pivot= pivot;
+    if (!m_pts.isEmpty())
+    {
+      setPoints(m_pts);
+    }
+  }
+  
+  public int testPoint(Point p){
+    return test.testPoint(p);
+  }
+}
 
+class ConvexHull{
+  
+  public ArrayList<Point> findConvexHull(ArrayList<Point> pts){
+    pts = sortByAngle(pts);
+    PointStack stack = new PointStack();
+    stack.push(pts.get(0));
+    stack.push(pts.get(1));
+    for (int i = 2; i <= pts.size()-1; i++){
+      while( DET(stack.get2FromTop(),stack.getTop(),pts.get(i)) == -1 ){
+        stack.pop();
+      }
+      stack.push(pts.get(i));
+    }
+    return stack.toArrayList();
+  }
+  public ArrayList<Point> sortByAngle(ArrayList<Point> pts){
+    int leftmost = 0;
+    float leastLeft = pts.get(0).getX();
+    float t;
+    int len = pts.size();
+    
+    for (int i = 0; i < len; i++){
+      t = pts.get(i).getX();
+      if (t < leastLeft){
+        leftmost  = i;
+        leastLeft = t;
+      }
+    }
+    Point tp = pts.get(leftmost);
+    pts.set(leftmost, pts.get(0));
+    pts.set(0,tp);
+    
+    int min;
+    
+    for (int j = 1; j < len - 1; j++)
+    {
+      min = j;
+      for (int i = j+1; i < len; i++){
+        if (DET(pts.get(0),pts.get(min),pts.get(i)) == 1){
+          min = i;
+        }
+      }
+      if (min != j){
+        tp = pts.get(j);
+        pts.set(j,pts.get(min));
+        pts.set(min,tp);
+      }
+    }
+    return pts;
+  }
+    
+}
+
+class PointStack{
+  PointNode head;
+  
+  public PointStack(){
+    head = null;
+  }
+  
+  public void push(Point p){
+    PointNode n = new PointNode(p);
+    if (head == null){
+      head = n;
+    }else{
+      n.setNext(head);
+      head = n;
+    }
+  }
+  
+  public Point pop(){
+    if (head == null){
+      //burn
+      return null;
+    }
+    
+    PointNode ret = head;
+    head = head.getNext();
+    return ret.getPoint(); 
+  }
+  
+  public Point getTop(){
+    return head.getPoint();
+  }
+  public Point get2FromTop(){
+    return head.getNext().getPoint();
+  }
+  
+  public ArrayList<Point> toArrayList(){
+    ArrayList<Point> ret = new ArrayList<Point>();
+    Point tp;// = head.getPoint();
+    PointNode pn = head;
+    while (pn != null){
+      tp = head.getPoint();
+      ret.add(tp);
+      pn = head.getNext();
+    }
+    return ret;
+  }
+}
+
+class PointNode{
+  private PointNode m_next;
+  private Point m_p;
+    
+  public PointNode(Point p){
+    m_p = p;
+  }
+    
+  public void setNext(PointNode pn){
+    m_next = pn;
+  }
+    
+  public Point getPoint(){
+    return m_p;
+  }
+  public PointNode getNext(){
+    return m_next;
+  }
+}
+    
