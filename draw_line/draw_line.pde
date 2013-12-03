@@ -10,6 +10,8 @@ DrawLine dl;
 color above;
 color linear;
 color below;
+color pointColor;
+color lineColor;
 
 ColorScreen cs;
 GraphScreen gs;
@@ -36,39 +38,70 @@ void setup(){
   above   = color(0,0,255);
   linear  = color(255,255,0);
   below   = color(255,0,0);
+  pointColor = color(255,255,255);
+  lineColor = color(0,0,0);
   //end setup
   
   //testing
-  P1 = new Point(100,50);
-  P2 = new Point(100,100);
-  P3 = new Point(75,200);
-  P4 = new Point(45,235);
-  P5 = new Point(200,210);
-  dl = new DrawLine(P1,P2);
+  //P1 = new Point(100,50);
+ // P2 = new Point(100,100);
+ // P3 = new Point(75,200);
+ // P4 = new Point(45,235);
+  //P5 = new Point(200,210);
+  //dl = new DrawLine(P1,P2);
   
-  ps.addPoint(P1);
-  ps.addPoint(P2);
-  ps.addPoint(P3);
-  ps.addPoint(P4);
-  ps.addPoint(P5);
+ // ps.addPoint(P1);
+ // ps.addPoint(P2);
+ // ps.addPoint(P3);
+ // ps.addPoint(P4);
+ // ps.addPoint(P5);
   //println(ps.get(0)+ps.get(1)+ps.get(2)+ps.get(3));
-  test.setMode(true,1);
-  test.setPoints(ps.getPoints());
+ // test.setMode(true,1);
+ // test.setPoints(ps.getPoints());
   
-  int t = 0;
-  boolean s;
-  cs.colorize();
+ // int t = 0;
+  //boolean s;
+ // cs.colorize();
   
-   stroke(0);
-  dl.draw();
-  stroke(255,255,255);
-  point(P1.getX(),P1.getY());
-  point(P2.getX(),P2.getY());
+ //  stroke(0);
+ // dl.draw();
+ // stroke(255,255,255);
+ // point(P1.getX(),P1.getY());
+ // point(P2.getX(),P2.getY());
 }
 
 void draw(){
 
 }
+
+void mouseClicked(){
+  //only do this when clicked in graph area.
+  BoxPoint pt = gs.pixelToBox(new BoxPoint(mouseX,mouseY));//should be boxpoint
+  println("Clicked point: "+pt);
+  ps.addPoint(pt);//here it should convert from screen coordinates to space coordinates
+  println("Number of Points: "+ps.getNumPts());
+  
+  test.setPoints(ps.getPoints());
+  println("Points set");
+
+  //color results
+  cs.colorize();
+  
+  //drawlines
+  
+  //drawpoints
+  ps.resetQueue();
+  Point point = ps.getNextPoint();
+  //BoxPoint bp = ps.pointToBox(ps.getNextPoint());
+  while (point != null){
+    println("Painting point: "+point);
+    cs.paintBox(ps.pointToBox(point),pointColor);
+    point = ps.getNextPoint();
+    //bp = ps.pointToBox(ps.getNextPoint());
+  }
+}
+    
+  
 
 
 class Point{
@@ -82,7 +115,6 @@ class Point{
     m_X = 0;
     m_Y = 0;
   }
-  
   float getX()
   {
     return m_X;
@@ -93,11 +125,39 @@ class Point{
   void setX(float x){
     m_X = x;
   }
-  
   void setY(float y){
     m_Y = y;
   }
-  
+  @Override
+  public String toString(){
+    return new String("("+m_X+","+m_Y+")");
+  }
+}
+
+class BoxPoint{
+  private int m_X;
+  private int m_Y;
+  public BoxPoint(int x, int y){
+    m_X = x;
+    m_Y = y;
+  }
+  public BoxPoint(){
+    m_X = 0;
+    m_Y = 0;
+  }
+  int getX()
+  {
+    return m_X;
+  }
+  int getY(){
+    return m_Y;
+  }
+  void setX(int x){
+    m_X = x;
+  }
+  void setY(int y){
+    m_Y = y;
+  }
   @Override
   public String toString(){
     return new String("("+m_X+","+m_Y+")");
@@ -403,10 +463,12 @@ class ColorScreen{
     Point p;
     for (int i = 0; i < gs.getWidth(); i++)
     {
+      //println(i);
       for (int j = 0; j < gs.getHeight(); j++)
       {
+        //println(j);
         //p = new Point(i,j);
-        int r = test.testPoint(new Point(i,j));
+        int r = test.testPoint(new Point(i,j));//must convert to point space in future
         if (r == 1)
         {
           c = above;
@@ -427,9 +489,11 @@ class ColorScreen{
     }
     return true;
   }
-  
-  private void paintBox(int x, int y, color c){     
-      Point[] ps = gs.boxToPixels(new Point(x,y));  
+  public void paintBox(int x, int y,color c){
+    paintBox(new BoxPoint(x,y),c);
+  }  
+  public void paintBox(BoxPoint bp, color c){     
+      BoxPoint[] ps = gs.boxToPixels(bp);  
       
       for (int i = (int)ps[0].getX(); i <= (int)ps[1].getX(); i++){
         for (int j = (int)ps[0].getY(); j <= (int)ps[1].getY(); j++){
@@ -472,27 +536,37 @@ class GraphScreen{ //also flips the y-axis
   {
     float s = (float)m_size;
     
-    float x = pixel.getX()/s;
+    float x = floor(pixel.getX()/s);
     float y = (float)m_height - floor(pixel.getY()/s) -1;
     
     return new Point(x,y);
   }
   
-  public Point[] boxToPixels(Point box){
-    float s = (float)m_size;
-    float h = (float)m_height;
+  public BoxPoint pixelToBox(BoxPoint pixel)
+  {
+    int s = m_size;
     
-    Point[] range = new Point[2];
+    int x = pixel.getX()/s;
+    int y = m_height - pixel.getY()/s -1;
+    
+    return new BoxPoint(x,y);
+  }
+  
+  public BoxPoint[] boxToPixels(BoxPoint box){
+    int s = m_size;
+    int h = m_height;
+    
+    BoxPoint[] range = new BoxPoint[2];
  
-    range[0] = new Point( (box.getX() * s), ( (h-box.getY()-1) * s));
-    range[1] = new Point( ((box.getX() * s) + s-1), ( ((h-box.getY()) * s) -1 ));
+    range[0] = new BoxPoint( (box.getX() * s), ( (h-box.getY()-1) * s));
+    range[1] = new BoxPoint( ((box.getX() * s) + s-1), ( ((h-box.getY()) * s) -1 ));
     
     //debug
-    if (count != 0){
-      println("range[0](x,y) = ("+ range[0].getX() +","+range[0].getY()+")");
-      println("range[1](x,y) = ("+ range[1].getX() +","+range[1].getY()+")\n");
-      count--;
-    }
+    //if (count != 0){
+   //   println("range[0](x,y) = ("+ range[0].getX() +","+range[0].getY()+")");
+   //   println("range[1](x,y) = ("+ range[1].getX() +","+range[1].getY()+")\n");
+    //  count--;
+   // }
     //
 
     return range;
@@ -537,6 +611,16 @@ class PointSpace{
     m_pts.add(p);
   }
   
+  public void addPoint(BoxPoint p){
+    float px = float(p.getX());
+    float py = float(p.getY());
+    
+    px += m_transX;
+    py += m_transY;
+    m_pts.add(new Point(px,py));
+  }
+    
+  
   public void screenTrans(float x, float y){
     m_transX += x;
     m_transY += y;
@@ -547,7 +631,7 @@ class PointSpace{
   }
   
   public Point getNextPoint(){ //returns in pointspace coordinates
-    return m_pts.get(m_index++);
+    return (m_index < m_pts.size()) ? m_pts.get(m_index++) : null;
   }
   
   public Point getNextPointTrans(){ //returns in screen coordinates
@@ -564,6 +648,11 @@ class PointSpace{
   
   public int getNumPts(){
     return m_pts.size();
+  }
+  
+  public BoxPoint pointToBox(Point pt){
+    //for now just convert to ints
+    return new BoxPoint(int(pt.getX()), int( pt.getY()) );
   }
   
 }
@@ -600,22 +689,23 @@ class Tester{
     if (size == 1){
       test = new NullTest();
     }
-    
-    if (m_mode){
-      switch (size){
-        case 2: test = new LinesideTest(m_pts.get(0),m_pts.get(1));
-                break;
-        case 3: test = new InTriangleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
-                break;
-        default: test = new InConvexHullTest(ch.findConvexHull(m_pts));
-      }
-    }else{
-      switch (size){
-        case 2: test = new InCircleTest(m_pts.get(0),m_pts.get(1));
-                break;
-        case 3: test = new InCircleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
-                break;
-        default: test = new NullTest();
+    else{
+      if (m_mode){
+        switch (size){
+          case 2: test = new LinesideTest(m_pts.get(0),m_pts.get(1));
+                  break;
+          case 3: test = new InTriangleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
+                  break;
+          default: test = new InConvexHullTest(ch.findConvexHull(m_pts));
+        }
+      }else{
+        switch (size){
+          case 2: test = new InCircleTest(m_pts.get(0),m_pts.get(1));
+                  break;
+          case 3: test = new InCircleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
+                  break;
+          default: test = new NullTest();
+        }
       }
     }
   }
@@ -630,7 +720,7 @@ class Tester{
   }
   
   public int testPoint(Point p){
-    println("Testing point: "+p.getX()+"'"+getY());
+    println("Testing point: "+ p);
     return test.testPoint(p);
   }
 }
