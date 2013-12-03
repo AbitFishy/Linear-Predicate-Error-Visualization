@@ -3,6 +3,7 @@ Point P1;
 Point P2;
 Point P3;
 Point P4;
+Point P5;
 
 DrawLine dl;
 
@@ -42,13 +43,16 @@ void setup(){
   P2 = new Point(100,100);
   P3 = new Point(75,200);
   P4 = new Point(45,235);
+  P5 = new Point(200,210);
   dl = new DrawLine(P1,P2);
   
   ps.addPoint(P1);
   ps.addPoint(P2);
   ps.addPoint(P3);
-  //ps.addPoint(P4);
-  test.setMode(false,1);
+  ps.addPoint(P4);
+  ps.addPoint(P5);
+  //println(ps.get(0)+ps.get(1)+ps.get(2)+ps.get(3));
+  test.setMode(true,1);
   test.setPoints(ps.getPoints());
   
   int t = 0;
@@ -264,10 +268,14 @@ class InConvexHullTest implements OrientTest{
   int vm;
   int left;
   
+  //debug
+  int count;
+  
   public InConvexHullTest(ArrayList<Point> pts){
     m_pts = pts;
     vm = 0;
     //left;
+    count = 1;
   }
   
   public int testPoint(Point tp){
@@ -278,27 +286,35 @@ class InConvexHullTest implements OrientTest{
   }
   
   private int whichSide(int vs, int vf, Point pt){
+    //println("whichSide loop: "+count++);
     if (vf-vs == 1){
       int r1 = DET(m_pts.get(vs),m_pts.get(vf),pt);
       if (r1 != -1){
         if (vs == 1){
           int r2 = DET(m_pts.get(0),m_pts.get(vs),pt);
-          if(r1 == 1 && r2 == 2){
+          if(r1 == 1 && r2 == 1){
             return 1;
           }else if ( (r1 == 1 && r2 == 0) || (r1 == 0 && r2 == 1) ){
             return 0;
+          }else{
+            return -1;
           }
         }else if (vf == m_pts.size()-1){
           int r2 = DET(m_pts.get(vf),m_pts.get(0),pt);
-          if(r1 == 1 && r2 == 2){
+          if(r1 == 1 && r2 == 1){
             return 1;
           }else if ( (r1 == 1 && r2 == 0) || (r1 == 0 && r2 == 1) ){
             return 0;
+          }else{
+            return -1;
           }
         }
       }else return -1;
     }
     
+    
+    
+    //println("vf: "+vf+ m_pts.get(vf)+" vs: "+vs+m_pts.get(vs)+ " vm: "+vm+m_pts.get(vm));
     vm = (vf-vs)/2 +vs;
     left = DET(m_pts.get(0),m_pts.get(vm),pt);
     if (left == 1){
@@ -614,6 +630,7 @@ class Tester{
   }
   
   public int testPoint(Point p){
+    println("Testing point: "+p.getX()+"'"+getY());
     return test.testPoint(p);
   }
 }
@@ -622,15 +639,17 @@ class ConvexHull{
   
   public ArrayList<Point> findConvexHull(ArrayList<Point> pts){
     pts = sortByAngle(pts);
+    
     PointStack stack = new PointStack();
     stack.push(pts.get(0));
     stack.push(pts.get(1));
     for (int i = 2; i <= pts.size()-1; i++){
-      while( DET(stack.get2FromTop(),stack.getTop(),pts.get(i)) == -1 ){
+      while( DET(stack.get2FromTop(),stack.getTop(),pts.get(i)) == 1 ){
         stack.pop();
       }
       stack.push(pts.get(i));
     }
+    println("Convex Hull found");
     return stack.toArrayList();
   }
   public ArrayList<Point> sortByAngle(ArrayList<Point> pts){
@@ -682,9 +701,15 @@ class PointStack{
     PointNode n = new PointNode(p);
     if (head == null){
       head = n;
+      //debug
+      println("First head: "+ head.getPoint().getX() +","+head.getPoint().getY() );
     }else{
+      println("Pushing: "+n.getPoint().getX() +","+n.getPoint().getY());
       n.setNext(head);
+      //head.setNext(null);
       head = n;
+      println("head: "+ head.getPoint().getX() +","+head.getPoint().getY() );
+      println("next: "+ head.getNext().getPoint().getX() +","+head.getNext().getPoint().getY() );
     }
   }
   
@@ -696,6 +721,7 @@ class PointStack{
     
     PointNode ret = head;
     head = head.getNext();
+    println("popping: "+ ret.getPoint().getX() +","+ret.getPoint().getY() );
     return ret.getPoint(); 
   }
   
@@ -703,6 +729,15 @@ class PointStack{
     return head.getPoint();
   }
   public Point get2FromTop(){
+    //debug
+    if (head == null){
+      println("Null head");
+    }
+    if (head.getNext() == null){
+      println("Null Next");
+      println(head.getPoint().getX() +","+head.getPoint().getY());
+    }
+    //end debug
     return head.getNext().getPoint();
   }
   
@@ -710,11 +745,18 @@ class PointStack{
     ArrayList<Point> ret = new ArrayList<Point>();
     Point tp;// = head.getPoint();
     PointNode pn = head;
+    
+    //debug
+    int count = 1;
+    
     while (pn != null){
-      tp = head.getPoint();
+      println("toArrayList loop: "+ count++);
+      tp = pn.getPoint();
+      println("adding point: "+tp.getX()+"'"+tp.getY());
       ret.add(tp);
-      pn = head.getNext();
+      pn = pn.getNext();
     }
+    println("Converted to ArrayList");
     return ret;
   }
 }
@@ -725,6 +767,7 @@ class PointNode{
     
   public PointNode(Point p){
     m_p = p;
+    m_next=null;
   }
     
   public void setNext(PointNode pn){
