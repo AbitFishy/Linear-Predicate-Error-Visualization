@@ -1,32 +1,39 @@
-
-Point P1;
-Point P2;
-Point P3;
-Point P4;
-Point P5;
-
-DrawLine dl;
-
 color above;
 color linear;
 color below;
 color pointColor;
 color lineColor;
+color textColor;
+color toolTextBGColor;
+color toolTextButtonColor;
+color toolTextButtonPressedColor;
 
 ColorScreen cs;
 GraphScreen gs;
+ToolScreen  ts;
 
 PointSpace ps;
 Tester test;
 
 ConvexHull ch;
+
+Point downMousePos;
+boolean acceptKeys;
+BoxPoint textBoxPos;
+int doubleClickCount;
+String inputString;
+Point textBoxTextPos;
+
 //debuging
 int count = 5;
 
+
+
 void setup(){
-  gs = new GraphScreen(3,255,255);
+  gs = new GraphScreen(3,255,400);
+  ts = new ToolScreen(20);
   
-  size(gs.screenSizeH(),gs.screenSizeW()); 
+  size(gs.screenSizeW(),gs.screenSizeH()+ts.getHeight()); 
   stroke(0);
   background(128);
   
@@ -35,74 +42,130 @@ void setup(){
   test = new Tester();
   ch   = new ConvexHull();
   
-  above   = color(0,0,255);
-  linear  = color(255,255,0);
-  below   = color(255,0,0);
-  pointColor = color(255,255,255);
+  above   = color(128,255,255);
+  linear  = color(255,0,0);
+  below   = color(255,165,0);
+  pointColor = color(0,0,255);
   lineColor = color(0,0,0);
+  textColor = color(0,0,0);
+  toolTextBGColor = color(0,0,255);
+  toolTextButtonColor = 0x9E4600FF;
+  toolTextButtonPressedColor = 0xF4460022;
+  
+  downMousePos = new Point(-1,-1);
+  doubleClickCount = 0;
+  acceptKeys = false;
+  textBoxPos = new BoxPoint(-1,-1);
+  inputString = new String();
+  textBoxTextPos = new Point(-1,-1);
+  
+  test.setPoints(ps.getPoints());
+  cs.colorize();
+  
   //end setup
-  
-  //testing
-  //P1 = new Point(100,50);
- // P2 = new Point(100,100);
- // P3 = new Point(75,200);
- // P4 = new Point(45,235);
-  //P5 = new Point(200,210);
-  //dl = new DrawLine(P1,P2);
-  
- // ps.addPoint(P1);
- // ps.addPoint(P2);
- // ps.addPoint(P3);
- // ps.addPoint(P4);
- // ps.addPoint(P5);
-  //println(ps.get(0)+ps.get(1)+ps.get(2)+ps.get(3));
- // test.setMode(true,1);
- // test.setPoints(ps.getPoints());
-  
- // int t = 0;
-  //boolean s;
- // cs.colorize();
-  
- //  stroke(0);
- // dl.draw();
- // stroke(255,255,255);
- // point(P1.getX(),P1.getY());
- // point(P2.getX(),P2.getY());
 }
 
 void draw(){
-
+  ts.drawLabels();
 }
 
-void mouseClicked(){
-  //only do this when clicked in graph area.
-  BoxPoint pt = gs.pixelToBox(new BoxPoint(mouseX,mouseY));//should be boxpoint
-  println("Clicked point: "+pt);
-  ps.addPoint(pt);//here it should convert from screen coordinates to space coordinates
-  println("Number of Points: "+ps.getNumPts());
-  
-  test.setPoints(ps.getPoints());
-  println("Points set");
-
-  //color results
-  cs.colorize();
-  
-  //drawlines
-  
-  //drawpoints
-  ps.resetQueue();
-  Point point = ps.getNextPoint();
-  //BoxPoint bp = ps.pointToBox(ps.getNextPoint());
-  while (point != null){
-    println("Painting point: "+point);
-    cs.paintBox(ps.pointToBox(point),pointColor);
-    point = ps.getNextPoint();
-    //bp = ps.pointToBox(ps.getNextPoint());
+void mousePressed(){
+  downMousePos.setX(mouseX);
+  downMousePos.setY(mouseY);
+  if (mouseY < gs.screenSizeH()){
+    
+  }
+  else{
+    if (ts.isButtonPressed()){
+      draw();
+    }
   }
 }
-    
-  
 
+void mouseReleased(){
+  if (ts.isWaitingForInput()){
+    if (doubleClickCount++ == 3){
+      ts.cancelInput();
+      doubleClickCount = 0;
+    }
+  }
+  else if (downMousePos.getX() == mouseX && downMousePos.getY() == mouseY){
+    //only do this when clicked in graph area.
+    if (mouseY < gs.screenSizeH()){
+      BoxPoint pt = gs.pixelToBox(new BoxPoint(mouseX,mouseY));
+      if (mouseButton == LEFT){ 
+        println("Clicked point: "+pt);
+        ps.addPoint(pt);//here it should convert from screen coordinates to space coordinates
+        println("Number of Points: "+ps.getNumPts());
+      }
+      else if (mouseButton == RIGHT){
+        boolean rm = ps.removePoint(pt);
+        if (rm){
+          println("Removed point: "+pt);
+        }
+        else{
+          println("Nothing at: "+pt);
+        }
+      }
+    
+    
+      test.setPoints(ps.getPoints());
+      println("Points set");
+    
+      //color results
+      cs.colorize();
+      
+      //drawlines
+      
+      //drawpoints
+      ps.resetQueue();
+      Point point = ps.getNextPoint();
+      //BoxPoint bp = ps.pointToBox(ps.getNextPoint());
+      while (point != null){
+        println("Painting point: "+point);
+        cs.paintBox(ps.pointToBox(point),pointColor);
+        point = ps.getNextPoint();
+        //bp = ps.pointToBox(ps.getNextPoint());
+      }
+    }else{
+      //tool area
+      ts.release(true);
+      
+    }
+  }else{ //mouse moved
+    ts.release(false);
+        
+  }
+  downMousePos.setX(-1);
+  downMousePos.setY(-1);
+}
+
+void keyTyped(){
+  if (acceptKeys){
+    switch (key){
+      case ENTER:
+      case RETURN:
+        ts.sendInput(inputString);
+        inputKeyboard(false,0,0);
+        inputString = new String();
+        break;
+      case ESC:
+      case BACKSPACE:
+        ts.cancelInput();
+        break;
+      default:
+        inputString += key;
+        float x = textBoxTextPos.getX();
+        float y = textBoxTextPos.getY();
+        text(key,x,y);
+        x += 7;
+        textBoxTextPos.setX(x);
+        break;
+    }
+  }  
+}
+    
+    
 
 class Point{
   private float m_X;
@@ -131,6 +194,10 @@ class Point{
   @Override
   public String toString(){
     return new String("("+m_X+","+m_Y+")");
+  }
+  @Override
+  public boolean equals(Object tp){
+    return (m_X== ((Point)tp).getX() && m_Y== ((Point)tp).getY());
   }
 }
 
@@ -431,6 +498,55 @@ class InCircleTest implements OrientTest{
     }
   }
 }
+
+class inSmallestCircleTest implements OrientTest{
+  ArrayList<Point> m_pts;
+  
+  float m_center;
+  float m_radius;
+  
+  public inSmallestCircleTest(ArrayList<Point> pts){
+    m_pts = minimumEnclosingBall(pts);
+    //center
+  }
+  
+  public ArrayList<Point> minimumEnclosingBall(ArrayList<Point> P){
+    ArrayList<Point> Q = new ArrayList<Point>();
+    
+    Q = MEB(P,Q);
+    
+    return Q;
+  }
+  
+  private ArrayList<Point> MEB(ArrayList<Point> P, ArrayList<Point> Q){
+    if (P.isEmpty()){
+      return Q;
+    }
+    
+    ArrayList<Point> B = (ArrayList<Point>)Q.clone();
+    int i = P.size();
+    P = scramblePoints(P);
+    for (int k = 1; k < i; k++){
+      if (B.contains( P.get(k) )){
+      }
+      else{
+        ArrayList<Point> subP = (ArrayList<Point>)P.clone();
+        //subP.removeRange(k,i);
+        Q.add(P.get(k));
+        B = MEB(subP,Q);
+      }
+    }
+    return Q;
+  }
+  
+  private ArrayList<Point> scramblePoints(ArrayList<Point> p){
+    return p;
+  }
+  
+  public int testPoint(Point tp){
+    return -1;
+  }
+}
   
 public int sign(float num){
   if (num > 0)
@@ -585,7 +701,7 @@ class PointSpace{
   float m_transX; //translation and scaling from the screen space to point space
   float m_transY;
   float m_scale;
-  //distance between boxes?
+  float m_distBTWBoxes;
   
   int m_index;
   
@@ -594,6 +710,7 @@ class PointSpace{
     m_transX = 0;
     m_transY = 0;
     m_scale  = 1;
+    m_distBTWBoxes = 1;
     
     m_index  = 0;
   }
@@ -619,6 +736,13 @@ class PointSpace{
     py += m_transY;
     m_pts.add(new Point(px,py));
   }
+  
+  public boolean removePoint(Point p){
+    return m_pts.remove(p);
+  }
+  public boolean removePoint(BoxPoint p){
+    return removePoint(boxToPoint(p));
+  }
     
   
   public void screenTrans(float x, float y){
@@ -634,7 +758,7 @@ class PointSpace{
     return (m_index < m_pts.size()) ? m_pts.get(m_index++) : null;
   }
   
-  public Point getNextPointTrans(){ //returns in screen coordinates
+  public Point getNextBox(){ //returns in screen coordinates
     return m_pts.get(m_index++);
   }
   
@@ -650,9 +774,18 @@ class PointSpace{
     return m_pts.size();
   }
   
+  public float getDistBTWBoxes(){
+    return m_distBTWBoxes;
+  }
+  
   public BoxPoint pointToBox(Point pt){
     //for now just convert to ints
     return new BoxPoint(int(pt.getX()), int( pt.getY()) );
+  }
+  
+  public Point boxToPoint(BoxPoint pt){
+    //for now just convert
+    return new Point(float(pt.getX()), float( pt.getY()));
   }
   
 }
@@ -685,8 +818,9 @@ class Tester{
   public void setPoints(ArrayList pts){
     m_pts = pts;
     int size = m_pts.size();
+    println(size + "(s) in set");
     
-    if (size == 1){
+    if (size <= 1){
       test = new NullTest();
     }
     else{
@@ -720,10 +854,190 @@ class Tester{
   }
   
   public int testPoint(Point p){
-    println("Testing point: "+ p);
+    //println("Testing point: "+ p);
     return test.testPoint(p);
   }
 }
+
+class ToolScreen{
+  int m_height;
+  int labelOffset;
+  int labelHeight;
+  int labelStart;
+  int mouseLabel;
+  int distLabel;
+  int scaleLabel;
+  int transLabel; 
+  int xRangeLabel;
+  int yRangeLabel;
+  
+  String mouseText;
+  String distText;
+  String scaleText;
+  String transText;
+  String xRangeText;
+  String yRangeText;
+  
+  int buttonStartY;
+  int buttonEndY;
+  
+  boolean isScaleDown;
+  boolean isTransDown;
+  
+  Point[] scaleButtonArea;
+  Point[] transButtonArea;
+  int inputOffset;
+  boolean waitForScaleInput;
+  boolean waitForTransInput;
+  
+  public ToolScreen(int h){
+    m_height = h;
+    labelOffset = 15;
+    labelHeight = gs.screenSizeH() +labelOffset;
+    labelStart = 5;
+    mouseLabel = labelStart;
+    distLabel  = mouseLabel   + 150;
+    scaleLabel = distLabel    + 170;
+    transLabel = scaleLabel   + 100;
+    xRangeLabel= transLabel   + 125;
+    yRangeLabel= xRangeLabel  + 150;
+    
+    mouseText = "Mouse at: ";
+    distText  = "Distance btw squares: ";
+    scaleText = "Scale Points";
+    transText = "Translate Points";
+    xRangeText= "X-Range: ";
+    yRangeText= "Y-Range: ";
+    
+    buttonStartY = labelHeight-labelOffset+3;
+    buttonEndY   = m_height-7;
+    
+    scaleButtonArea = new Point[2];
+    transButtonArea = new Point[2];
+    scaleButtonArea[0] = new Point(scaleLabel-10,buttonStartY);
+    scaleButtonArea[1] = new Point(90,buttonEndY);
+    transButtonArea[0] = new Point(transLabel-10,buttonStartY);
+    transButtonArea[1] = new Point(transLabel-scaleLabel+10,buttonEndY);
+    
+    isScaleDown = false;
+    isTransDown = false;
+    
+    inputOffset = 30;
+    waitForScaleInput = false;
+    waitForTransInput = false;
+    
+  }
+  public ToolScreen(){
+    m_height = 20;
+  }
+  public void setHeight(int h){
+    m_height = h;
+  }
+  public int getHeight(){
+    return m_height;
+  }
+  
+  public void drawLabels(){
+      //Tool text
+    int xDraw = gs.screenSizeW();
+    int yDraw = gs.screenSizeH();
+    fill(toolTextBGColor);
+    stroke(0,0,0);
+    rect(0,yDraw,xDraw-1,m_height-1);
+    
+    fill(toolTextButtonColor);
+    rect(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
+    rect(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
+    if (isScaleDown){
+      fill(toolTextButtonPressedColor);
+      rect(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
+    }
+    else if (isTransDown){
+      fill(toolTextButtonPressedColor);
+      rect(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
+    }
+    
+    Point mouse = ps.boxToPoint(gs.pixelToBox(new BoxPoint(mouseX,mouseY)));
+    fill(textColor);
+    text(mouseText + mouse,mouseLabel,labelHeight);//change to point coordinates
+    text(distText  + ps.getDistBTWBoxes(), distLabel, labelHeight);
+    text(scaleText, scaleLabel,labelHeight);
+    text(transText, transLabel,labelHeight);
+    text(xRangeText+ "#####"+"-"+"######", xRangeLabel,labelHeight);
+    text(yRangeText+ "#####"+"-"+"######", yRangeLabel,labelHeight);
+    
+  }
+  
+  public boolean isButtonPressed(){
+    if (isPointInBox(mouseX,mouseY,(int)scaleButtonArea[0].getX(),(int)scaleButtonArea[0].getY(),(int)scaleButtonArea[1].getX(),(int)scaleButtonArea[1].getY())){
+      isScaleDown = true;
+      println("Scale Button Down");
+      return true;
+    }
+    else if (isPointInBox(mouseX,mouseY,(int)transButtonArea[0].getX(),(int)transButtonArea[0].getY(),(int)transButtonArea[1].getX(),(int)transButtonArea[1].getY())){
+      isTransDown = true;
+      println("Translate Button Down");
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  public void release(boolean clicked){
+    if (!clicked){
+      isScaleDown = false;
+      isTransDown = false;
+    }
+    else{
+      if (isScaleDown){
+        scaleButtonInput();
+      }
+      else if (isTransDown){
+        transButtonInput();
+      }
+      else{
+        println("Release function failure");
+      }
+      
+      
+      isScaleDown = false;
+      isTransDown = false; 
+    }
+  }
+  
+  private void scaleButtonInput(){
+    //String input = getTextInput(scaleButtonArea[0].getX(),scaleButtonArea[0].getY()-inputOffset);
+    inputKeyboard(true,scaleButtonArea[0].getX(),scaleButtonArea[0].getY()-inputOffset);
+    waitForScaleInput = true;
+  }
+  private void transButtonInput(){
+    //String input = getTextInput(transButtonArea[0].getX(),transButtonArea[0[].getY()-inputOffset);
+    inputKeyboard(true,transButtonArea[0].getX(),transButtonArea[0].getY()-inputOffset);
+    waitForTransInput = true;
+  }
+  
+  public boolean isWaitingForInput(){
+    if (waitForTransInput || waitForTransInput){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  
+  public void cancelInput(){
+    waitForScaleInput = false;
+    waitForTransInput = false;
+    inputKeyboard(false,0,0);
+  }
+  
+  public void sendInput(String input){
+    println(input);
+    cancelInput();
+  }
+  
+}
+  
 
 class ConvexHull{
   
@@ -871,4 +1185,36 @@ class PointNode{
     return m_next;
   }
 }
-    
+
+public boolean isPointInBox(int pointX, int pointY, int rectX, int rectY, int w, int h){
+  if (pointX >= rectX && pointX <= rectX+w && pointY >= rectY && pointY <= pointY+h){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+public void inputKeyboard(boolean yes, float x, float y){
+  if (yes){
+    acceptKeys = true;
+    //textInputPos.setX((int)x);
+    //textInputPos.setY((int)y);
+    stroke(0,0,0);
+    fill(255,255,255);
+    rect(x,y, 100, 15);
+    textBoxTextPos.setX(x+3);
+    textBoxTextPos.setY(y+12);
+  }
+  else{
+    acceptKeys = false;
+    //textInputPos.setX(-1);
+    //textInputPos.setY(-1);
+    textBoxTextPos.setY(-1);
+    textBoxTextPos.setX(-1);
+    inputString = new String();
+    test.setPoints(ps.getPoints());
+    cs.colorize();
+  } //when will the box get over written?
+}
+  
