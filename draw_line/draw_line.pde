@@ -109,8 +109,8 @@ void mouseDragged(){
         boolean negX;
         boolean negY;
         
-        float transX = -( mouseX - dragMousePos.getX())/ gs.getBoxSize();
-        float transY = ( mouseY - dragMousePos.getY())/ gs.getBoxSize();
+        double transX = -( mouseX - dragMousePos.getX())/ gs.getBoxSize();
+        double transY = ( mouseY - dragMousePos.getY())/ gs.getBoxSize();
         //negX = transX < 0 ? true:false;
         //negY = transY < 0 ? true:false;
         //transX= -(transX);
@@ -180,7 +180,7 @@ void mouseReleased(){
 }
 
 void mouseWheel(MouseEvent event){
-  float amount = event.getAmount();
+  double amount = event.getAmount();
   ps.screenScale(-amount);
   
   test.setPoints(ps.getPoints());
@@ -199,9 +199,9 @@ void keyTyped(){
     
 
 class Point{
-  private float m_X;
-  private float m_Y;
-  Point(float x, float y){
+  private double m_X;
+  private double m_Y;
+  Point(double x, double y){
     m_X = x;
     m_Y = y;
   }
@@ -209,17 +209,17 @@ class Point{
     m_X = 0;
     m_Y = 0;
   }
-  float getX()
+  double getX()
   {
     return m_X;
   }
-  float getY(){
+  double getY(){
     return m_Y;
   }
-  void setX(float x){
+  void setX(double x){
     m_X = x;
   }
-  void setY(float y){
+  void setY(double y){
     m_Y = y;
   }
   @Override
@@ -239,11 +239,11 @@ class Point{
     return new Point(m_X-p.getX(),m_Y-p.getY());
   }
   
-  public Point mul(float s){
+  public Point mul(double s){
     return new Point(m_X*s,m_Y*s);
   }
   
-  public Point div(float s){
+  public Point div(double s){
     return new Point(m_X/s,m_Y/s);
   }
 }
@@ -304,8 +304,8 @@ class DrawLine{
   private Point m_pt2;
   private Point m_rpt1;
   private Point m_rpt2;
-  private float m_M;
-  private float m_B;
+  private double m_M;
+  private double m_B;
   
   private Point m_pt3;
   private Point m_pt4;
@@ -348,10 +348,10 @@ class DrawLine{
   }
   
   private void findBorderInter(){
-    float h = float(height);
-    float w = float(width);
-    float tx = 0;
-    float ty  = m_M*w + m_B;
+    double h = (double)(height);
+    double w = (double)(width);
+    double tx = 0;
+    double ty  = m_M*w + m_B;
     
     if (!isVertical){
       Point tp;
@@ -429,19 +429,19 @@ public int DET(Point p1, Point p2, Point p3)  {
 }
   
 public int DET4(Point p1, Point p2, Point p3, Point tp){
-  float p1x = p1.getX();
-  float p1y = p1.getY();
-  float p2x = p2.getX();
-  float p2y = p2.getY();
-  float p3x = p3.getX();
-  float p3y = p3.getY();
-  float tpx = tp.getX();
-  float tpy = tp.getY();
+  double p1x = p1.getX();
+  double p1y = p1.getY();
+  double p2x = p2.getX();
+  double p2y = p2.getY();
+  double p3x = p3.getX();
+  double p3y = p3.getY();
+  double tpx = tp.getX();
+  double tpy = tp.getY();
   
-  float p1s = p1x*p1x + p1y*p1y;
-  float p2s = p2x*p2x + p2y*p2y;
-  float p3s = p3x*p3x + p3y*p3y;
-  float tps = tpx*tpx + tpy*tpy;
+  double p1s = p1x*p1x + p1y*p1y;
+  double p2s = p2x*p2x + p2y*p2y;
+  double p3s = p3x*p3x + p3y*p3y;
+  double tps = tpx*tpx + tpy*tpy;
   return sign( p1x*p2y*p3s  +  p2x*p3y*tps  +  p3x*tpy*p1s  +  tpx*p1y*p2s
              -(p1s*p2y*p3x) - (p2s*p3y*tpx) - (p3s*tpy*p1x) - (tps*p1y*p2x) );
 }
@@ -578,13 +578,13 @@ class InCircleTest implements OrientTest{
   public int testPoint(Point tp){
     if (mode){
       
-      float x = abs(m_p1.getX()-m_p2.getX());
-      float y = abs(m_p1.getY()-m_p2.getY());
-      float csq1 = x*x + y*y;
+      double x = absD(m_p1.getX()-m_p2.getX());
+      double y = absD(m_p1.getY()-m_p2.getY());
+      double csq1 = x*x + y*y;
       
-      x = abs(m_p1.getX()-tp.getX());
-      y = abs(m_p1.getY()-tp.getY());
-      float csq2 = x*x + y*y;
+      x = absD(m_p1.getX()-tp.getX());
+      y = absD(m_p1.getY()-tp.getY());
+      double csq2 = x*x + y*y;
       
       if (csq1 > csq2){
         return 1;
@@ -605,8 +605,8 @@ class InCircleTest implements OrientTest{
 class inSmallestCircleTest implements OrientTest{
   ArrayList<Point> m_pts;
   
-  float m_center;
-  float m_radius;
+  double m_center;
+  double m_radius;
   
   public inSmallestCircleTest(ArrayList<Point> pts){
     m_pts = minimumEnclosingBall(pts);
@@ -651,7 +651,7 @@ class inSmallestCircleTest implements OrientTest{
   }
 }
   
-public int sign(float num){
+public int sign(double num){
   if (num > 0)
   {
     return 1;
@@ -776,8 +776,8 @@ class GraphScreen{ //also flips the y-axis
   {
     int s = m_size;
     
-    int x = floor(pixel.getX()/s);
-    int y = m_height - floor(pixel.getY()/s) -1;
+    int x = floor((float)(pixel.getX()/s));
+    int y = m_height - floor((float)(pixel.getY()/s)) -1;
     
     return new BoxPoint(x,y);
   }
@@ -827,11 +827,11 @@ class GraphScreen{ //also flips the y-axis
 class PointSpace{
   ArrayList<Point> m_pts;
   
-  float m_transX; //translation and scaling from the screen space to point space
-  float m_transY;
-  float m_scale;
-  float m_distBTWBoxes;
-  float m_scaleFactor;
+  double m_transX; //translation and scaling from the screen space to point space
+  double m_transY;
+  double m_scale;
+  double m_distBTWBoxes;
+  double m_scaleFactor;
   
   int m_index;
   boolean scaleAndTrans;
@@ -849,13 +849,13 @@ class PointSpace{
   }
   
   public void addPoint(Point p){//Screen to World
-    float sx = p.getX();
-    float sy = p.getY();
+    double sx = p.getX();
+    double sy = p.getY();
     
     //px += m_transX;
     //py += m_transY;
-    float wx = sx/m_scale + m_transX;
-    float wy = sy/m_scale + m_transY;
+    double wx = sx/m_scale + m_transX;
+    double wy = sy/m_scale + m_transY;
     
     p.setX(wx);
     p.setY(wy);
@@ -864,10 +864,10 @@ class PointSpace{
   }
   
   public void addPoint(BoxPoint p){
-    float sx = float(p.getX());
-    float sy = float(p.getY());
-    float wx = sx/m_scale + m_transX;
-    float wy = sy/m_scale + m_transY;
+    double sx = (double)(p.getX());
+    double sy = (double)(p.getY());
+    double wx = sx/m_scale + m_transX;
+    double wy = sy/m_scale + m_transY;
 
     m_pts.add(new Point(wx,wy));
   }
@@ -893,12 +893,12 @@ class PointSpace{
   }
     
   
-  public void screenTrans(float x, float y){
+  public void screenTrans(double x, double y){
     m_transX += x * (1/m_scale);
     m_transY += y * (1/m_scale); 
   }
   
-  public void screenScale( float s){
+  public void screenScale( double s){
     
     Point A = boxToPoint(new BoxPoint(0,0));
     Point B = boxToPoint(new BoxPoint(gs.getWidth()-1,gs.getHeight()-1));
@@ -925,7 +925,7 @@ class PointSpace{
       Point len = oldLen.div( (m_scaleFactor));
       println("oldlen: "+oldLen+" len: "+len);
       
-      float divider = (s < 1) ? .5 : 2;
+      double divider = (s < 1) ? .5 : 2;
       Point botLeft= mouse.sub(len.div(divider));
       println("len.div: " + len.div(divider) + " botLeft: " + botLeft);
       
@@ -945,11 +945,11 @@ class PointSpace{
     }
   }
   
-  public void setScaleFactor(float sf){
+  public void setScaleFactor(double sf){
     m_scaleFactor = sf;
   }
   
-  public float getScaleFactor(){
+  public double getScaleFactor(){
     return m_scaleFactor;
   }
   
@@ -975,13 +975,13 @@ class PointSpace{
     return m_pts.size();
   }
   
-  public float getDistBTWBoxes(){
+  public double getDistBTWBoxes(){
     return m_distBTWBoxes;
   }
   
-  public void setDistBTWBoxes(float dist){
-    //float transX = m_transX;
-    //float transY = m_transY;
+  public void setDistBTWBoxes(double dist){
+    //double transX = m_transX;
+    //double transY = m_transY;
     
     m_distBTWBoxes = dist;
     m_scale = 1/dist;
@@ -992,16 +992,16 @@ class PointSpace{
     println("Changed distace to: " + dist);
   }
   
-  public void setXRange(float x1, float x2){
+  public void setXRange(double x1, double x2){
     if (x2 <= x1){
       println("Negative x range: " + x1 + " : " +x2);
       return;
     }
     else{
-      //float transY = m_transY;
-      float len = x2-x1;
-      float w = gs.getWidth();
-      float dist = len/w;
+      //double transY = m_transY;
+      double len = x2-x1;
+      double w = gs.getWidth();
+      double dist = len/w;
       m_distBTWBoxes = dist;
       m_scale = 1/dist;
       m_transX = x1;
@@ -1009,16 +1009,16 @@ class PointSpace{
     }
       
   }
-  public void setYRange(float y1,float y2){
+  public void setYRange(double y1,double y2){
     if (y2 <= y1){
       println("Negative y range: " + y1 + " : " +y2);
       return;
     }
     else{
-      //float transX = m_transX;
-      float len = y2-y1;
-      float w = gs.getHeight();
-      float dist = len/w;
+      //double transX = m_transX;
+      double len = y2-y1;
+      double w = gs.getHeight();
+      double dist = len/w;
       m_distBTWBoxes = dist;
       m_scale = 1/dist;
       m_transY = y1;
@@ -1035,16 +1035,16 @@ class PointSpace{
   }
   
   public Point boxToPoint(BoxPoint pt){ //screen to world conversion
-    //return new Point(float(pt.getX()), float( pt.getY()));
+    //return new Point(double(pt.getX()), double( pt.getY()));
     return (pt == null) ? null : new Point( (pt.getX()/m_scale) + m_transX, (pt.getY()/m_scale) +m_transY);
   }
   
-  public void scalePoints(float s){
+  public void scalePoints(double s){
     for (int i = 0; i <m_pts.size();i++){
       m_pts.set(i,m_pts.get(i).mul(s));
     }
   }
-  public void translatePoints(float x, float y){
+  public void translatePoints(double x, double y){
     for (int i = 0; i <m_pts.size();i++){
       m_pts.set(i,m_pts.get(i).add(new Point(x,y)));
     }
@@ -1230,30 +1230,30 @@ class ToolScreen{
     rect(0,yDraw,xDraw-1,m_height-1);
     
     fill(toolTextButtonColor);
-    rect(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
-    rect(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
-    rect(dist2ButtonArea[0].getX(),dist2ButtonArea[0].getY(),dist2ButtonArea[1].getX(),dist2ButtonArea[1].getY());
-    rect(xRangButtonArea[0].getX(),xRangButtonArea[0].getY(),xRangButtonArea[1].getX(),xRangButtonArea[1].getY());
-    rect(yRangButtonArea[0].getX(),yRangButtonArea[0].getY(),yRangButtonArea[1].getX(),yRangButtonArea[1].getY());
+    rectD(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
+    rectD(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
+    rectD(dist2ButtonArea[0].getX(),dist2ButtonArea[0].getY(),dist2ButtonArea[1].getX(),dist2ButtonArea[1].getY());
+    rectD(xRangButtonArea[0].getX(),xRangButtonArea[0].getY(),xRangButtonArea[1].getX(),xRangButtonArea[1].getY());
+    rectD(yRangButtonArea[0].getX(),yRangButtonArea[0].getY(),yRangButtonArea[1].getX(),yRangButtonArea[1].getY());
     if (isScaleDown){
       fill(toolTextButtonPressedColor);
-      rect(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
+      rectD(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
     }
     else if (isTransDown){
       fill(toolTextButtonPressedColor);
-      rect(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
+      rectD(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
     }
     else if (isDist2Down){
       fill(toolTextButtonPressedColor);
-      rect(dist2ButtonArea[0].getX(),dist2ButtonArea[0].getY(),dist2ButtonArea[1].getX(),dist2ButtonArea[1].getY());
+      rectD(dist2ButtonArea[0].getX(),dist2ButtonArea[0].getY(),dist2ButtonArea[1].getX(),dist2ButtonArea[1].getY());
     }
     else if (isXRangDown){
       fill(toolTextButtonPressedColor);
-      rect(xRangButtonArea[0].getX(),xRangButtonArea[0].getY(),xRangButtonArea[1].getX(),xRangButtonArea[1].getY());
+      rectD(xRangButtonArea[0].getX(),xRangButtonArea[0].getY(),xRangButtonArea[1].getX(),xRangButtonArea[1].getY());
     }
     else if (isYRangDown){
       fill(toolTextButtonPressedColor);
-      rect(yRangButtonArea[0].getX(),yRangButtonArea[0].getY(),yRangButtonArea[1].getX(),yRangButtonArea[1].getY());
+      rectD(yRangButtonArea[0].getX(),yRangButtonArea[0].getY(),yRangButtonArea[1].getX(),yRangButtonArea[1].getY());
     }
     
     Point mouse = ps.boxToPoint(gs.pixelToBox(new BoxPoint(mouseX,mouseY)));
@@ -1382,24 +1382,24 @@ class ToolScreen{
     println("Input: " +input);
     try{    
       if (waitForScaleInput){
-        float scaling = Float.parseFloat(input);
+        double scaling = Double.parseDouble(input);
         println("Scaling by: "+scaling);
         ps.scalePoints(scaling);
         println("Input Success");
       }
       else if (waitForTransInput){
-        float xTran;
-        float yTran;
+        double xTran;
+        double yTran;
         int commaLoc = input.indexOf(',');
         if (commaLoc == -1){
-          xTran = Float.parseFloat(input);
+          xTran = Double.parseDouble(input);
           println("Translate x: "+xTran);
           ps.translatePoints(xTran,0);
           println("Input Success");
         }
         else{
-          xTran = Float.parseFloat(input.substring(0,commaLoc));
-          yTran = Float.parseFloat(input.substring(commaLoc+1,input.length()));
+          xTran = Double.parseDouble(input.substring(0,commaLoc));
+          yTran = Double.parseDouble(input.substring(commaLoc+1,input.length()));
           println("Translate x: "+xTran+ "  y: "+yTran);
           ps.translatePoints(xTran,yTran);
           println("Input Success");
@@ -1407,36 +1407,36 @@ class ToolScreen{
           
       }
       else if (waitForDist2Input){
-        float distance = Float.parseFloat(input);
+        double distance = Double.parseDouble(input);
         println("Distance btw pts now: "+ distance);
         ps.setDistBTWBoxes(distance);
         println("Input Success");
       }
       else if (waitForXRangInput){
-        float x1;
-        float x2;
+        double x1;
+        double x2;
         int colonLoc = input.indexOf(':');
         if (colonLoc == -1){
           println("Not a range");
         }
         else{
-          x1 = Float.parseFloat(input.substring(0,colonLoc));
-          x2 = Float.parseFloat(input.substring(colonLoc+1,input.length()));
+          x1 = Double.parseDouble(input.substring(0,colonLoc));
+          x2 = Double.parseDouble(input.substring(colonLoc+1,input.length()));
           println("X-Range: "+x1+ "  : "+x2);
           ps.setXRange(x1,x2);
           println("Input Success");
         }
       }
       else if (waitForYRangInput){
-        float y1;
-        float y2;
+        double y1;
+        double y2;
         int colonLoc = input.indexOf(':');
         if (colonLoc == -1){
           println("Not a range");
         }
         else{
-          y1 = Float.parseFloat(input.substring(0,colonLoc));
-          y2 = Float.parseFloat(input.substring(colonLoc+1,input.length()));
+          y1 = Double.parseDouble(input.substring(0,colonLoc));
+          y2 = Double.parseDouble(input.substring(colonLoc+1,input.length()));
           println("Y-Range: "+y1+ "  : "+y2);
           ps.setYRange(y1,y2);
           println("Input Success");
@@ -1475,8 +1475,8 @@ class ConvexHull{
   }
   public ArrayList<Point> sortByAngle(ArrayList<Point> pts){
     int leftmost = 0;
-    float leastLeft = pts.get(0).getX();
-    float t;
+    double leastLeft = pts.get(0).getX();
+    double t;
     int len = pts.size();
     
     for (int i = 0; i < len; i++){
@@ -1613,8 +1613,8 @@ public boolean isPointInBox(int pointX, int pointY, int rectX, int rectY, int w,
 }
 
 class KeyboardInput{ //a sloppily constructed class
-  private float m_x;
-  private float m_y;
+  private double m_x;
+  private double m_y;
   String inputString;
   Point textPos;
   boolean acceptKeys;
@@ -1629,14 +1629,14 @@ class KeyboardInput{ //a sloppily constructed class
     doubleClickCount = 0;
   }
   
-  public void inputKeyboard(boolean yes, float x, float y){
+  public void inputKeyboard(boolean yes, double x, double y){
     if (yes){
       acceptKeys = true;
       //textInputPos.setX((int)x);
       //textInputPos.setY((int)y);
       stroke(0,0,0);
       fill(255,255,255);
-      rect(x,y, 100, 15);
+      rectD(x,y, 100, 15);
       textPos.setX(x+3);
       textPos.setY(y+12);
       m_x = x;
@@ -1661,9 +1661,9 @@ class KeyboardInput{ //a sloppily constructed class
   public void drawKeyboardInput(){
     stroke(0,0,0);
     fill(255,255,255);
-    rect(m_x,m_y, 100, 15);
+    rectD(m_x,m_y, 100, 15);
     fill(textColor);
-    text(inputString,m_x+3,textPos.getY());
+    text(inputString, (float)(m_x+3),(float)(textPos.getY()));
   }
   
   public void inputKey(){
@@ -1680,14 +1680,25 @@ class KeyboardInput{ //a sloppily constructed class
         break;
       default:
         inputString += key;
-        float x = textPos.getX();
-        float y = textPos.getY();
-        text(key,x,y);
+        double x = textPos.getX();
+        double y = textPos.getY();
+        text(key,(float)x,(float)y);
         x += 7;
         textPos.setX(x);
         break;
     }
   }
 }
-  
+
+public double absD(double d){
+  return d<0 ? d*(-1):d;
+}
+
+public void rectD(double x1,double y1,double x2,double y2){
+  rect((float)x1,(float)y1,(float)x2,(float)y2);
+}
+
+public void textD(String s, double x, double y){
+  text(s,(float)x,(float)y);
+}
   
