@@ -18,6 +18,7 @@ Tester test;
 ConvexHull ch;
 
 Point downMousePos;
+Point dragMousePos;
 boolean acceptKeys;
 BoxPoint textBoxPos;
 int doubleClickCount;
@@ -30,7 +31,7 @@ int count = 5;
 
 
 void setup(){
-  gs = new GraphScreen(3,255,400);
+  gs = new GraphScreen(3,256,400);
   ts = new ToolScreen(20);
   
   size(gs.screenSizeW(),gs.screenSizeH()+ts.getHeight()); 
@@ -53,11 +54,14 @@ void setup(){
   toolTextButtonPressedColor = 0xF4460022;
   
   downMousePos = new Point(-1,-1);
+  dragMousePos = new Point(-1,-1);
   doubleClickCount = 0;
   acceptKeys = false;
   textBoxPos = new BoxPoint(-1,-1);
   inputString = new String();
   textBoxTextPos = new Point(-1,-1);
+  
+  ps.scaleAndTrans(true);
   
   test.setPoints(ps.getPoints());
   cs.colorize();
@@ -67,20 +71,56 @@ void setup(){
 
 void draw(){
   ts.drawLabels();
+  cs.draw();
+  
+  //drawlines
+      
+  //drawpoints
+  ps.resetQueue();
+  Point point = ps.getNextPoint();
+  while (point != null){
+    //println("Painting point: "+point);
+    cs.paintBox(ps.pointToBox(point),pointColor);
+    point = ps.getNextPoint();
+  }
 }
 
 void mousePressed(){
   downMousePos.setX(mouseX);
   downMousePos.setY(mouseY);
   if (mouseY < gs.screenSizeH()){
-    
+    dragMousePos.setX(mouseX);
+    dragMousePos.setY(mouseY);
   }
   else{
     if (ts.isButtonPressed()){
-      draw();
+      //draw();
     }
   }
 }
+
+void mouseDragged(){
+  if (mouseButton == LEFT){
+    if (mouseY < gs.screenSizeH()){//moved and in graph area
+        boolean negX;
+        boolean negY;
+        
+        float transX = -( mouseX - dragMousePos.getX())/ gs.getBoxSize();
+        float transY = ( mouseY - dragMousePos.getY())/ gs.getBoxSize();
+        //negX = transX < 0 ? true:false;
+        //negY = transY < 0 ? true:false;
+        //transX= -(transX);
+        //transY = (transY);
+        //transX = negX == true ? transX-1 : transX;
+        //transY = negY == true ? transY+1 : transY;
+        
+        dragMousePos.setX(mouseX);
+        dragMousePos.setY(mouseY);
+        ps.screenTrans(transX,transY);
+     }
+  }
+}
+     
 
 void mouseReleased(){
   if (ts.isWaitingForInput()){
@@ -101,10 +141,10 @@ void mouseReleased(){
       else if (mouseButton == RIGHT){
         boolean rm = ps.removePoint(pt);
         if (rm){
-          println("Removed point: "+pt);
+          println("Removed point: "+ps.boxToPoint(pt));
         }
         else{
-          println("Nothing at: "+pt);
+          println("Nothing at: "+ps.boxToPoint(pt));
         }
       }
     
@@ -115,18 +155,8 @@ void mouseReleased(){
       //color results
       cs.colorize();
       
-      //drawlines
       
-      //drawpoints
-      ps.resetQueue();
-      Point point = ps.getNextPoint();
-      //BoxPoint bp = ps.pointToBox(ps.getNextPoint());
-      while (point != null){
-        println("Painting point: "+point);
-        cs.paintBox(ps.pointToBox(point),pointColor);
-        point = ps.getNextPoint();
-        //bp = ps.pointToBox(ps.getNextPoint());
-      }
+      
     }else{
       //tool area
       ts.release(true);
@@ -134,10 +164,26 @@ void mouseReleased(){
     }
   }else{ //mouse moved
     ts.release(false);
-        
+    test.setPoints(ps.getPoints());
+    cs.colorize();
+       
   }
+  
   downMousePos.setX(-1);
   downMousePos.setY(-1);
+  dragMousePos.setX(-1);
+  dragMousePos.setY(-1);
+}
+
+void mouseWheel(MouseEvent event){
+  float amount = event.getAmount();
+  ps.screenScale(-amount);
+  
+  test.setPoints(ps.getPoints());
+  println("Points set after scroll");
+  cs.colorize();
+  println("Colorized after scroll");
+  
 }
 
 void keyTyped(){
@@ -199,6 +245,22 @@ class Point{
   public boolean equals(Object tp){
     return (m_X== ((Point)tp).getX() && m_Y== ((Point)tp).getY());
   }
+  
+  public Point add(Point p){
+    return new Point(p.getX()+m_X,p.getY()+m_Y);
+  }
+  
+  public Point sub(Point p){
+    return new Point(m_X-p.getX(),m_Y-p.getY());
+  }
+  
+  public Point mult(float s){
+    return new Point(m_X*s,m_Y*s);
+  }
+  
+  public Point div(float s){
+    return new Point(m_X/s,m_Y/s);
+  }
 }
 
 class BoxPoint{
@@ -228,6 +290,22 @@ class BoxPoint{
   @Override
   public String toString(){
     return new String("("+m_X+","+m_Y+")");
+  }
+  
+  public BoxPoint add(BoxPoint p){
+    return new BoxPoint(p.getX()+m_X,p.getY()+m_Y);
+  }
+  
+  public BoxPoint sub(BoxPoint p){
+    return new BoxPoint(m_X-p.getX(),m_Y-p.getY());
+  }
+  
+  public BoxPoint mul(int s){
+    return new BoxPoint(m_X*s,m_Y*s);
+  }
+  
+  public BoxPoint div(int s){
+    return new BoxPoint(m_X/s,m_Y/s);
   }
 }
 
@@ -565,9 +643,11 @@ public int sign(float num){
 class ColorScreen{
   //private ArrayList<Point> m_pts;
   private PointSpace m_pts;
+  private color[][] m_screen;
 
   public ColorScreen(PointSpace p){
-    m_pts = p;  
+    m_pts = p;
+    m_screen = new color[gs.getWidth()][gs.getHeight()];  
   }
   
   //public void addPoint(Point p){
@@ -584,7 +664,7 @@ class ColorScreen{
       {
         //println(j);
         //p = new Point(i,j);
-        int r = test.testPoint(new Point(i,j));//must convert to point space in future
+        int r = test.testPoint(ps.boxToPoint(new BoxPoint(i,j)));
         if (r == 1)
         {
           c = above;
@@ -600,6 +680,7 @@ class ColorScreen{
         
         //stroke(0);
         //fill(c);
+        m_screen[i][j] = c;
         paintBox(i,j,c);
       }
     }
@@ -616,6 +697,17 @@ class ColorScreen{
           set(i,j,c);
         }
       }
+  }
+  
+  public void draw(){
+    color c;
+    for (int i = 0; i < gs.getWidth(); i++){
+      for (int j = 0; j < gs.getHeight(); j++){
+        c = m_screen[i][j];
+        BoxPoint p = ps.pointToBox(ps.boxToPoint(new BoxPoint(i,j)));
+        paintBox(p.getX(),p.getY(),c);
+      }
+    }
   }
 }
     
@@ -648,14 +740,14 @@ class GraphScreen{ //also flips the y-axis
     return m_size;
   }
   
-  public Point pixelToBox(Point pixel)
+  public BoxPoint pixelToBox(Point pixel)
   {
-    float s = (float)m_size;
+    int s = m_size;
     
-    float x = floor(pixel.getX()/s);
-    float y = (float)m_height - floor(pixel.getY()/s) -1;
+    int x = floor(pixel.getX()/s);
+    int y = m_height - floor(pixel.getY()/s) -1;
     
-    return new Point(x,y);
+    return new BoxPoint(x,y);
   }
   
   public BoxPoint pixelToBox(BoxPoint pixel)
@@ -684,7 +776,6 @@ class GraphScreen{ //also flips the y-axis
     //  count--;
    // }
     //
-
     return range;
   }
   
@@ -702,8 +793,10 @@ class PointSpace{
   float m_transY;
   float m_scale;
   float m_distBTWBoxes;
+  float m_scaleFactor;
   
   int m_index;
+  boolean scaleAndTrans;
   
   public PointSpace(){
     m_pts = new ArrayList<Point>();
@@ -711,55 +804,118 @@ class PointSpace{
     m_transY = 0;
     m_scale  = 1;
     m_distBTWBoxes = 1;
+    m_scaleFactor = 2;
     
     m_index  = 0;
+    scaleAndTrans = false;
   }
   
-  public void addPoint(Point p){
-    float px = p.getX();
-    float py = p.getY();
+  public void addPoint(Point p){//Screen to World
+    float sx = p.getX();
+    float sy = p.getY();
     
-    px += m_transX;
-    py += m_transY;
+    //px += m_transX;
+    //py += m_transY;
+    float wx = sx/m_scale + m_transX;
+    float wy = sy/m_scale + m_transY;
     
-    p.setX(px);
-    p.setY(py);
+    p.setX(wx);
+    p.setY(wy);
     
     m_pts.add(p);
   }
   
   public void addPoint(BoxPoint p){
-    float px = float(p.getX());
-    float py = float(p.getY());
-    
-    px += m_transX;
-    py += m_transY;
-    m_pts.add(new Point(px,py));
+    float sx = float(p.getX());
+    float sy = float(p.getY());
+    float wx = sx/m_scale + m_transX;
+    float wy = sy/m_scale + m_transY;
+
+    m_pts.add(new Point(wx,wy));
   }
   
-  public boolean removePoint(Point p){
+  public boolean removePoint(Point p){ //world coordinates
     return m_pts.remove(p);
   }
-  public boolean removePoint(BoxPoint p){
+  public boolean removePoint(BoxPoint p){//screen to world conversion
     return removePoint(boxToPoint(p));
   }
     
   
   public void screenTrans(float x, float y){
-    m_transX += x;
-    m_transY += y;
+    m_transX += x * (1/m_scale);
+    m_transY += y * (1/m_scale); 
   }
   
   public void screenScale( float s){
+    
+    Point A = boxToPoint(new BoxPoint(0,0));
+    Point B = boxToPoint(new BoxPoint(gs.getWidth()-1,gs.getHeight()-1));
+    Point mouse =  boxToPoint(gs.pixelToBox(new Point (mouseX,mouseY)));
+    
+    if (s >0){
+      s *= m_scaleFactor;
+    }
+    else if(s<0){
+      s = -1/(s*m_scaleFactor);
+    }
+    else{
+      s = 1;
+    }
+    
     m_scale *= s;
+    m_distBTWBoxes = 1/m_scale;
+    println("Scaling by: " + s + ", Scale: " + m_scale);
+    
+    if (scaleAndTrans){  
+      //Point mouse =  boxToPoint(gs.pixelToBox(new Point (mouseX,mouseY)));
+      println("A: " + A + " B: " +B+" mouse: "+mouse);
+      
+      //Point A = boxToPoint(new BoxPoint(0,0));
+      //Point B = boxToPoint(new BoxPoint(gs.getWidth(),gs.getHeight()));
+      
+      //Point len (B-A)/m_scale;
+      Point oldLen = B.sub(A);
+      //Point oldLen = B.add(new Point(1,1));
+      Point len = oldLen.div( (m_scaleFactor));
+      println("oldlen: "+oldLen+" len: "+len);
+      
+      float divider = (s < 1) ? .5 : 2;
+      Point botLeft= mouse.sub(len.div(divider));
+      println("len.div: " + len.div(divider) + " botLeft: " + botLeft);
+      
+      m_transX = botLeft.getX();
+      m_transY = botLeft.getY();
+      
+      println("Translate zoom: "+m_transX+" "+m_transY);
+    }
   }
   
-  public Point getNextPoint(){ //returns in pointspace coordinates
+  public void scaleAndTrans(boolean yes){
+    if (yes){
+      scaleAndTrans = true;
+    }
+    else{
+      scaleAndTrans = false;
+    }
+  }
+  
+  public void setScaleFactor(float sf){
+    m_scaleFactor = sf;
+  }
+  
+  public float getScaleFactor(){
+    return m_scaleFactor;
+  }
+  
+  public Point getNextPoint(){ //returns in pointspace (world) coordinates
     return (m_index < m_pts.size()) ? m_pts.get(m_index++) : null;
   }
   
   public Point getNextBox(){ //returns in screen coordinates
-    return m_pts.get(m_index++);
+    Point wp = (m_index < m_pts.size()) ? m_pts.get(m_index++) : null;
+    Point sp = wp == null ? null : new Point(m_scale * (wp.getX()-m_transX), m_scale * (wp.getY()-m_transY) );
+    return sp;
   }
   
   public void resetQueue(){
@@ -778,14 +934,18 @@ class PointSpace{
     return m_distBTWBoxes;
   }
   
-  public BoxPoint pointToBox(Point pt){
-    //for now just convert to ints
-    return new BoxPoint(int(pt.getX()), int( pt.getY()) );
+  public BoxPoint pointToBox(Point pt){ //world to screen conversion
+    return (pt == null) ? null : new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
+    //
+    //testing
+    //BoxPoint sp = new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
+    
+    
   }
   
-  public Point boxToPoint(BoxPoint pt){
-    //for now just convert
-    return new Point(float(pt.getX()), float( pt.getY()));
+  public Point boxToPoint(BoxPoint pt){ //screen to world conversion
+    //return new Point(float(pt.getX()), float( pt.getY()));
+    return (pt == null) ? null : new Point( (pt.getX()/m_scale) + m_transX, (pt.getY()/m_scale) +m_transY);
   }
   
 }
@@ -830,7 +990,9 @@ class Tester{
                   break;
           case 3: test = new InTriangleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
                   break;
-          default: test = new InConvexHullTest(ch.findConvexHull(m_pts));
+          case 4: test = new InConvexHullTest(ch.findConvexHull(m_pts));
+                  break;
+          default: test = new NullTest();
         }
       }else{
         switch (size){
@@ -896,11 +1058,11 @@ class ToolScreen{
     labelHeight = gs.screenSizeH() +labelOffset;
     labelStart = 5;
     mouseLabel = labelStart;
-    distLabel  = mouseLabel   + 150;
-    scaleLabel = distLabel    + 170;
+    distLabel  = mouseLabel   + 200;
+    scaleLabel = distLabel    + 230;
     transLabel = scaleLabel   + 100;
     xRangeLabel= transLabel   + 125;
-    yRangeLabel= xRangeLabel  + 150;
+    yRangeLabel= xRangeLabel  + 220;
     
     mouseText = "Mouse at: ";
     distText  = "Distance btw squares: ";
@@ -958,13 +1120,15 @@ class ToolScreen{
     }
     
     Point mouse = ps.boxToPoint(gs.pixelToBox(new BoxPoint(mouseX,mouseY)));
+    Point bLeft = ps.boxToPoint(new BoxPoint(0,0));
+    Point tRight= ps.boxToPoint(new BoxPoint(gs.getWidth()-1,gs.getHeight()-1));
     fill(textColor);
     text(mouseText + mouse,mouseLabel,labelHeight);//change to point coordinates
     text(distText  + ps.getDistBTWBoxes(), distLabel, labelHeight);
     text(scaleText, scaleLabel,labelHeight);
     text(transText, transLabel,labelHeight);
-    text(xRangeText+ "#####"+"-"+"######", xRangeLabel,labelHeight);
-    text(yRangeText+ "#####"+"-"+"######", yRangeLabel,labelHeight);
+    text(xRangeText+ bLeft.getX()+" : "+tRight.getX()+"  "+yRangeText+ bLeft.getY()+" : "+tRight.getY(), xRangeLabel,labelHeight);
+   // text(yRangeText+ tRight.getX()+"-"+tRight.getY(), yRangeLabel,labelHeight);
     
   }
   
