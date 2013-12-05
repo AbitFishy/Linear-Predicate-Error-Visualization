@@ -992,39 +992,47 @@ class PointSpace{
     println("Changed distace to: " + dist);
   }
   
-  public void setXRange(double x1, double x2){
-    if (x2 <= x1){
-      println("Negative x range: " + x1 + " : " +x2);
-      return;
-    }
-    else{
-      //double transY = m_transY;
-      double len = x2-x1;
-      double w = gs.getWidth();
-      double dist = len/w;
-      m_distBTWBoxes = dist;
-      m_scale = 1/dist;
-      m_transX = x1;
-      //m_transY = transY*m_scale;
-    }
-      
+  public void setX(double x){
+    m_transX = x;
   }
-  public void setYRange(double y1,double y2){
-    if (y2 <= y1){
-      println("Negative y range: " + y1 + " : " +y2);
-      return;
-    }
-    else{
-      //double transX = m_transX;
-      double len = y2-y1;
-      double w = gs.getHeight();
-      double dist = len/w;
-      m_distBTWBoxes = dist;
-      m_scale = 1/dist;
-      m_transY = y1;
+
+  public void setY(double y){
+    m_transY = y;
+  }  
+  
+//  public void setXRange(double x1, double x2){
+//    if (x2 <= x1){
+//      println("Negative x range: " + x1 + " : " +x2);
+//      return;
+//    }
+//    else{
+//      //double transY = m_transY;
+//      double len = x2-x1;
+//      double w = gs.getWidth();
+//      double dist = len/w;
+//      m_distBTWBoxes = dist;
+//      m_scale = 1/dist;
+//      m_transX = x1;
+//      //m_transY = transY*m_scale;
+//    }
+//      
+//  }
+//  public void setYRange(double y1,double y2){
+//    if (y2 <= y1){
+//      println("Negative y range: " + y1 + " : " +y2);
+//      return;
+ //   }
+ //   else{
+//      //double transX = m_transX;
+//      double len = y2-y1;
+//      double w = gs.getHeight();
+//      double dist = len/w;
+//      m_distBTWBoxes = dist;
+//      m_scale = 1/dist;
+//      m_transY = y1;
      // m_transX = transX*m_scale;
-    }
-  }
+//    }
+//  }
   
   public BoxPoint pointToBox(Point pt){ //world to screen conversion
     return (pt == null) ? null : new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
@@ -1416,14 +1424,15 @@ class ToolScreen{
         double x1;
         double x2;
         int colonLoc = input.indexOf(':');
-        if (colonLoc == -1){
+        if (colonLoc != -1){
           println("Not a range");
         }
         else{
-          x1 = Double.parseDouble(input.substring(0,colonLoc));
-          x2 = Double.parseDouble(input.substring(colonLoc+1,input.length()));
-          println("X-Range: "+x1+ "  : "+x2);
-          ps.setXRange(x1,x2);
+          x1 = Double.parseDouble(input);
+          //x2 = Double.parseDouble(input.substring(colonLoc+1,input.length()));
+          //println("X-Range: "+x1+ "  : "+x2);
+          println("X: "+x1);
+          ps.setX(x1);
           println("Input Success");
         }
       }
@@ -1431,14 +1440,15 @@ class ToolScreen{
         double y1;
         double y2;
         int colonLoc = input.indexOf(':');
-        if (colonLoc == -1){
+        if (colonLoc != -1){
           println("Not a range");
         }
         else{
-          y1 = Double.parseDouble(input.substring(0,colonLoc));
-          y2 = Double.parseDouble(input.substring(colonLoc+1,input.length()));
-          println("Y-Range: "+y1+ "  : "+y2);
-          ps.setYRange(y1,y2);
+          y1 = Double.parseDouble(input);
+          //y2 = Double.parseDouble(input.substring(colonLoc+1,input.length()));
+          //println("Y-Range: "+y1+ "  : "+y2);
+          println("Y: "+y1);
+          ps.setY(y1);
           println("Input Success");
         }
       }
@@ -1682,7 +1692,7 @@ class KeyboardInput{ //a sloppily constructed class
         inputString += key;
         double x = textPos.getX();
         double y = textPos.getY();
-        text(key,(float)x,(float)y);
+        //text(key,(float)x,(float)y);
         x += 7;
         textPos.setX(x);
         break;
