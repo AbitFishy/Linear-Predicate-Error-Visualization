@@ -992,6 +992,13 @@ class PointSpace{
     println("Changed distace to: " + dist);
   }
   
+  public void setX(float x){
+    m_transX = x;
+  }
+  public void setY(float y){
+    m_transY = y;
+  }
+  
   public void setXRange(float x1, float x2){
     if (x2 <= x1){
       println("Negative x range: " + x1 + " : " +x2);
@@ -1413,34 +1420,18 @@ class ToolScreen{
         println("Input Success");
       }
       else if (waitForXRangInput){
-        float x1;
-        float x2;
-        int colonLoc = input.indexOf(':');
-        if (colonLoc == -1){
-          println("Not a range");
-        }
-        else{
-          x1 = Float.parseFloat(input.substring(0,colonLoc));
-          x2 = Float.parseFloat(input.substring(colonLoc+1,input.length()));
-          println("X-Range: "+x1+ "  : "+x2);
-          ps.setXRange(x1,x2);
-          println("Input Success");
-        }
+        float x1;        
+        x1 = Float.parseFloat(input);
+        println("X: "+x1);
+        ps.setX(x1);
+        println("Input Success");
       }
       else if (waitForYRangInput){
         float y1;
-        float y2;
-        int colonLoc = input.indexOf(':');
-        if (colonLoc == -1){
-          println("Not a range");
-        }
-        else{
-          y1 = Float.parseFloat(input.substring(0,colonLoc));
-          y2 = Float.parseFloat(input.substring(colonLoc+1,input.length()));
-          println("Y-Range: "+y1+ "  : "+y2);
-          ps.setYRange(y1,y2);
-          println("Input Success");
-        }
+        y1 = Float.parseFloat(input);
+        println("Y: "+y1);
+        ps.setY(y1);
+        println("Input Success");
       }
     }
     catch (java.lang.NumberFormatException e){
@@ -1682,7 +1673,7 @@ class KeyboardInput{ //a sloppily constructed class
         inputString += key;
         float x = textPos.getX();
         float y = textPos.getY();
-        text(key,x,y);
+        //text(key,x,y);
         x += 7;
         textPos.setX(x);
         break;
