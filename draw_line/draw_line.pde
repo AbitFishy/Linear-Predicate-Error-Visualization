@@ -425,7 +425,9 @@ class NullTest implements OrientTest{
 }
 
 public int DET(Point p1, Point p2, Point p3)  {
-  return sign( (p1.getX()*(p2.getY()-p3.getY())) + (p2.getX()*(p3.getY()-p1.getY())) + (p3.getX()*(p1.getY()-p2.getY())) );
+  //return sign( (p1.getX()*(p2.getY()-p3.getY())) + (p2.getX()*(p3.getY()-p1.getY())) + (p3.getX()*(p1.getY()-p2.getY())) );
+  return sign ( (p2.getX()-p1.getX()) * (p3.getY()-p1.getY()) - (p2.getY()-p1.getY()) * (p3.getX()-p1.getX()));
+
 }
   
 public int DET4(Point p1, Point p2, Point p3, Point tp){
