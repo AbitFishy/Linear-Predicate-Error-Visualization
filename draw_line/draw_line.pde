@@ -17,6 +17,7 @@ PointSpace ps;
 Tester test;
 
 ConvexHull ch;
+DrawLine dl;
 
 Point downMousePos;
 Point dragMousePos;
@@ -41,6 +42,7 @@ void setup(){
   cs   = new ColorScreen(ps);
   test = new Tester();
   ch   = new ConvexHull();
+  dl = new DrawLine();
   
   above   = color(128,255,255);
   linear  = color(255,0,0);
@@ -68,6 +70,11 @@ void draw(){
   cs.draw();
   
   //drawlines
+  if (ps.getNumPts() == 2){
+    if (!dl.needsReset()){
+      //dl.draw();
+    }
+  }
       
   //drawpoints
   ps.resetQueue();
@@ -269,6 +276,10 @@ class BoxPoint{
   public String toString(){
     return new String("("+m_X+","+m_Y+")");
   }
+  @Override
+  public boolean equals(Object tp){
+    return (m_X == ((BoxPoint)tp).getX() && m_Y == ((BoxPoint)tp).getY());
+  }
   
   public BoxPoint add(BoxPoint p){
     return new BoxPoint(p.getX()+m_X,p.getY()+m_Y);
@@ -285,11 +296,14 @@ class BoxPoint{
   public BoxPoint div(int s){
     return new BoxPoint(m_X/s,m_Y/s);
   }
+
 }
 
 class DrawLine{
   private Point m_pt1;
   private Point m_pt2;
+  private Point m_rpt1;
+  private Point m_rpt2;
   private float m_M;
   private float m_B;
   
@@ -297,9 +311,32 @@ class DrawLine{
   private Point m_pt4;
   private boolean isVertical;
   
+  private boolean reset;
+  
   public DrawLine(Point pt1, Point pt2){
-    m_pt1 = pt1;
-    m_pt2 = pt2;
+    reset = false;
+    setPoints(pt1,pt2);
+  }
+  
+  public DrawLine(){
+    reset = true;
+  }
+  
+  public void setReset(boolean r){
+    reset = r;
+  }
+  public boolean needsReset(){
+    return reset;
+  }
+  
+  public void setPoints(Point pt1, Point pt2){
+    
+    reset = false;
+    BoxPoint tbp1 = ps.pointToBox(pt1);
+    BoxPoint tbp2 = ps.pointToBox(pt2);
+    m_pt1 = new Point(tbp1.getX(),tbp1.getY());
+    m_pt2 = new Point(tbp2.getX(),tbp2.getY());
+    
     if (pt2.getX() == pt1.getX()){
       isVertical = true;
     }else {
@@ -361,9 +398,19 @@ class DrawLine{
   }
   
   public void draw(){
-    line(m_pt1.getX(),m_pt1.getY(),m_pt2.getX(),m_pt2.getY());
-    line(m_pt1.getX(),m_pt1.getY(),m_pt3.getX(),m_pt3.getY());
-    line(m_pt2.getX(),m_pt2.getY(),m_pt4.getX(),m_pt4.getY());
+
+    BoxPoint tp = new BoxPoint((int)m_pt1.getX(),(int)m_pt1.getY());    
+    BoxPoint p1 = gs.boxToBoxCenter(tp);
+    tp = new BoxPoint((int)m_pt2.getX(),(int)m_pt2.getY());
+    BoxPoint p2 = gs.boxToBoxCenter(tp);
+    new BoxPoint((int)m_pt3.getX(),(int)m_pt3.getY());
+    BoxPoint p3 = gs.boxToBoxCenter(tp);
+    new BoxPoint((int)m_pt4.getX(),(int)m_pt4.getY());
+    BoxPoint p4 = gs.boxToBoxCenter(tp);
+    
+    line(p1.getX(),p1.getY(),p2.getX(),p2.getY());
+    line(p1.getX(),p1.getY(),p3.getX(),p3.getY());
+    line(p2.getX(),p2.getY(),p4.getX(),p4.getY());
   }
 }
 
@@ -635,6 +682,11 @@ class ColorScreen{
   public boolean colorize(){
     color c;
     Point p;
+    
+    Point p1 = ps.boxToPoint(new BoxPoint(2,2));
+    Point p2 = ps.boxToPoint(new BoxPoint(2,3));
+    int count = 2;
+    
     for (int i = 0; i < gs.getWidth(); i++)
     {
       //println(i);
@@ -642,6 +694,7 @@ class ColorScreen{
       {
         //println(j);
         //p = new Point(i,j);
+        
         int r = test.testPoint(ps.boxToPoint(new BoxPoint(i,j)));
         if (r == 1)
         {
@@ -662,6 +715,7 @@ class ColorScreen{
         paintBox(i,j,c);
       }
     }
+    println("Dist btw box during tests " +p1+p2);
     return true;
   }
   public void paintBox(int x, int y,color c){
@@ -736,6 +790,12 @@ class GraphScreen{ //also flips the y-axis
     int y = m_height - pixel.getY()/s -1;
     
     return new BoxPoint(x,y);
+  }
+  
+  public BoxPoint boxToBoxCenter(BoxPoint box){
+    int s = m_size;
+    int h = m_height;
+    return new BoxPoint((box.getX() * s)+(gs.getBoxSize()/2),(box.getY() * s)+(gs.getBoxSize()/2));
   }
   
   public BoxPoint[] boxToPixels(BoxPoint box){
@@ -813,10 +873,23 @@ class PointSpace{
   }
   
   public boolean removePoint(Point p){ //world coordinates
+    
     return m_pts.remove(p);
   }
-  public boolean removePoint(BoxPoint p){//screen to world conversion
-    return removePoint(boxToPoint(p));
+  public boolean removePoint(BoxPoint rp){//screen to world conversion
+    //return removePoint(boxToPoint(p));
+    BoxPoint sp;
+    println("Trying to remove " +rp);
+    
+    for (int i = 0; i < m_pts.size();i++){
+      sp = ps.pointToBox(m_pts.get(i));
+      println("Testing pt " + sp + " / " +m_pts.get(i));
+      if (sp.equals(rp)){
+        m_pts.remove(i);
+        return true;
+      }
+    }
+    return false;
   }
     
   
@@ -846,15 +919,9 @@ class PointSpace{
     println("Scaling by: " + s + ", Scale: " + m_scale);
     
     if (scaleAndTrans){  
-      //Point mouse =  boxToPoint(gs.pixelToBox(new Point (mouseX,mouseY)));
       println("A: " + A + " B: " +B+" mouse: "+mouse);
-      
-      //Point A = boxToPoint(new BoxPoint(0,0));
-      //Point B = boxToPoint(new BoxPoint(gs.getWidth(),gs.getHeight()));
-      
-      //Point len (B-A)/m_scale;
+
       Point oldLen = B.sub(A);
-      //Point oldLen = B.add(new Point(1,1));
       Point len = oldLen.div( (m_scaleFactor));
       println("oldlen: "+oldLen+" len: "+len);
       
@@ -912,13 +979,59 @@ class PointSpace{
     return m_distBTWBoxes;
   }
   
+  public void setDistBTWBoxes(float dist){
+    //float transX = m_transX;
+    //float transY = m_transY;
+    
+    m_distBTWBoxes = dist;
+    m_scale = 1/dist;
+    
+    //m_transX = transX*m_scale;
+    //m_transY = transY*m_scale;
+    
+    println("Changed distace to: " + dist);
+  }
+  
+  public void setXRange(float x1, float x2){
+    if (x2 <= x1){
+      println("Negative x range: " + x1 + " : " +x2);
+      return;
+    }
+    else{
+      //float transY = m_transY;
+      float len = x2-x1;
+      float w = gs.getWidth();
+      float dist = len/w;
+      m_distBTWBoxes = dist;
+      m_scale = 1/dist;
+      m_transX = x1;
+      //m_transY = transY*m_scale;
+    }
+      
+  }
+  public void setYRange(float y1,float y2){
+    if (y2 <= y1){
+      println("Negative y range: " + y1 + " : " +y2);
+      return;
+    }
+    else{
+      //float transX = m_transX;
+      float len = y2-y1;
+      float w = gs.getHeight();
+      float dist = len/w;
+      m_distBTWBoxes = dist;
+      m_scale = 1/dist;
+      m_transY = y1;
+     // m_transX = transX*m_scale;
+    }
+  }
+  
   public BoxPoint pointToBox(Point pt){ //world to screen conversion
     return (pt == null) ? null : new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
     //
     //testing
     //BoxPoint sp = new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
-    
-    
+
   }
   
   public Point boxToPoint(BoxPoint pt){ //screen to world conversion
@@ -976,6 +1089,7 @@ class Tester{
       if (m_mode){
         switch (size){
           case 2: test = new LinesideTest(m_pts.get(0),m_pts.get(1));
+                  dl.setPoints(m_pts.get(0),m_pts.get(1));
                   break;
           case 3: test = new InTriangleTest(m_pts.get(0),m_pts.get(1),m_pts.get(2));
                   break;
@@ -1034,12 +1148,21 @@ class ToolScreen{
   
   boolean isScaleDown;
   boolean isTransDown;
+  boolean isDist2Down;
+  boolean isXRangDown;
+  boolean isYRangDown;
   
   Point[] scaleButtonArea;
   Point[] transButtonArea;
+  Point[] dist2ButtonArea;
+  Point[] xRangButtonArea;
+  Point[] yRangButtonArea;
   int inputOffset;
   boolean waitForScaleInput;
   boolean waitForTransInput;
+  boolean waitForDist2Input;
+  boolean waitForXRangInput;
+  boolean waitForYRangInput;
   
   public ToolScreen(int h){
     m_height = h;
@@ -1065,10 +1188,20 @@ class ToolScreen{
     
     scaleButtonArea = new Point[2];
     transButtonArea = new Point[2];
+    dist2ButtonArea = new Point[2];
+    xRangButtonArea = new Point[2];
+    yRangButtonArea = new Point[2];
+    
     scaleButtonArea[0] = new Point(scaleLabel-10,buttonStartY);
     scaleButtonArea[1] = new Point(90,buttonEndY);
     transButtonArea[0] = new Point(transLabel-10,buttonStartY);
     transButtonArea[1] = new Point(transLabel-scaleLabel+10,buttonEndY);
+    dist2ButtonArea[0] = new Point(distLabel-10,buttonStartY);
+    dist2ButtonArea[1] = new Point(220,buttonEndY);
+    xRangButtonArea[0] = new Point(xRangeLabel-10,buttonStartY);
+    xRangButtonArea[1] = new Point(63,buttonEndY);
+    yRangButtonArea[0] = new Point(yRangeLabel + 50,buttonStartY);
+    yRangButtonArea[1] = new Point(100,buttonEndY);
     
     isScaleDown = false;
     isTransDown = false;
@@ -1099,6 +1232,9 @@ class ToolScreen{
     fill(toolTextButtonColor);
     rect(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
     rect(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
+    rect(dist2ButtonArea[0].getX(),dist2ButtonArea[0].getY(),dist2ButtonArea[1].getX(),dist2ButtonArea[1].getY());
+    rect(xRangButtonArea[0].getX(),xRangButtonArea[0].getY(),xRangButtonArea[1].getX(),xRangButtonArea[1].getY());
+    rect(yRangButtonArea[0].getX(),yRangButtonArea[0].getY(),yRangButtonArea[1].getX(),yRangButtonArea[1].getY());
     if (isScaleDown){
       fill(toolTextButtonPressedColor);
       rect(scaleButtonArea[0].getX(),scaleButtonArea[0].getY(),scaleButtonArea[1].getX(),scaleButtonArea[1].getY());
@@ -1106,6 +1242,18 @@ class ToolScreen{
     else if (isTransDown){
       fill(toolTextButtonPressedColor);
       rect(transButtonArea[0].getX(),transButtonArea[0].getY(),transButtonArea[1].getX(),transButtonArea[1].getY());
+    }
+    else if (isDist2Down){
+      fill(toolTextButtonPressedColor);
+      rect(dist2ButtonArea[0].getX(),dist2ButtonArea[0].getY(),dist2ButtonArea[1].getX(),dist2ButtonArea[1].getY());
+    }
+    else if (isXRangDown){
+      fill(toolTextButtonPressedColor);
+      rect(xRangButtonArea[0].getX(),xRangButtonArea[0].getY(),xRangButtonArea[1].getX(),xRangButtonArea[1].getY());
+    }
+    else if (isYRangDown){
+      fill(toolTextButtonPressedColor);
+      rect(yRangButtonArea[0].getX(),yRangButtonArea[0].getY(),yRangButtonArea[1].getX(),yRangButtonArea[1].getY());
     }
     
     Point mouse = ps.boxToPoint(gs.pixelToBox(new BoxPoint(mouseX,mouseY)));
@@ -1132,6 +1280,21 @@ class ToolScreen{
       println("Translate Button Down");
       return true;
     }
+    else if (isPointInBox(mouseX,mouseY,(int)dist2ButtonArea[0].getX(),(int)dist2ButtonArea[0].getY(),(int)dist2ButtonArea[1].getX(),(int)dist2ButtonArea[1].getY())){
+      isDist2Down = true;
+      println("Distance Button Down");
+      return true;
+    }
+    else if (isPointInBox(mouseX,mouseY,(int)xRangButtonArea[0].getX(),(int)xRangButtonArea[0].getY(),(int)xRangButtonArea[1].getX(),(int)xRangButtonArea[1].getX())){
+      isXRangDown = true;
+      println("X-Range Button Down");
+      return true;
+    }
+    else if (isPointInBox(mouseX,mouseY,(int)yRangButtonArea[0].getX(),(int)yRangButtonArea[0].getY(),(int)yRangButtonArea[1].getX(),(int)yRangButtonArea[1].getX())){
+      isYRangDown = true;
+      println("Y-Rang Button Down");
+      return true;
+    }
     else{
       return false;
     }
@@ -1140,6 +1303,9 @@ class ToolScreen{
     if (!clicked){
       isScaleDown = false;
       isTransDown = false;
+      isDist2Down = false;
+      isXRangDown = false;
+      isYRangDown = false;
     }
     else{
       if (isScaleDown){
@@ -1148,13 +1314,25 @@ class ToolScreen{
       else if (isTransDown){
         transButtonInput();
       }
+      else if (isDist2Down){
+        dist2ButtonInput();
+      }
+      else if (isXRangDown){
+        xRangButtonInput();
+      }
+      else if (isYRangDown){
+        yRangButtonInput();
+      }
       else{
         println("Release function failure");
       }
       
       
       isScaleDown = false;
-      isTransDown = false; 
+      isTransDown = false;
+      isDist2Down = false;
+      isXRangDown = false;
+      isYRangDown = false; 
     }
   }
   
@@ -1168,9 +1346,22 @@ class ToolScreen{
     ki.inputKeyboard(true,transButtonArea[0].getX(),transButtonArea[0].getY()-inputOffset);
     waitForTransInput = true;
   }
+  private void dist2ButtonInput(){
+    ki.inputKeyboard(true,dist2ButtonArea[0].getX(),dist2ButtonArea[0].getY()-inputOffset);
+    waitForDist2Input = true;
+  }
+  private void xRangButtonInput(){
+    ki.inputKeyboard(true,xRangButtonArea[0].getX(),xRangButtonArea[0].getY()-inputOffset);
+    waitForXRangInput = true;
+  }
+  private void yRangButtonInput(){
+    ki.inputKeyboard(true,yRangButtonArea[0].getX(),yRangButtonArea[0].getY()-inputOffset);
+    waitForYRangInput = true;
+  }
+  
   
   public boolean isWaitingForInput(){
-    if (waitForTransInput || waitForTransInput){
+    if (waitForTransInput || waitForScaleInput || waitForDist2Input || waitForXRangInput || waitForYRangInput){
       return true;
     }
     else{
@@ -1181,6 +1372,9 @@ class ToolScreen{
   public void cancelInput(){
     waitForScaleInput = false;
     waitForTransInput = false;
+    waitForDist2Input = false;
+    waitForXRangInput = false;
+    waitForYRangInput = false;
     ki.inputKeyboard(false,0,0);
   }
   
@@ -1211,6 +1405,42 @@ class ToolScreen{
           println("Input Success");
         }
           
+      }
+      else if (waitForDist2Input){
+        float distance = Float.parseFloat(input);
+        println("Distance btw pts now: "+ distance);
+        ps.setDistBTWBoxes(distance);
+        println("Input Success");
+      }
+      else if (waitForXRangInput){
+        float x1;
+        float x2;
+        int colonLoc = input.indexOf(':');
+        if (colonLoc == -1){
+          println("Not a range");
+        }
+        else{
+          x1 = Float.parseFloat(input.substring(0,colonLoc));
+          x2 = Float.parseFloat(input.substring(colonLoc+1,input.length()));
+          println("X-Range: "+x1+ "  : "+x2);
+          ps.setXRange(x1,x2);
+          println("Input Success");
+        }
+      }
+      else if (waitForYRangInput){
+        float y1;
+        float y2;
+        int colonLoc = input.indexOf(':');
+        if (colonLoc == -1){
+          println("Not a range");
+        }
+        else{
+          y1 = Float.parseFloat(input.substring(0,colonLoc));
+          y2 = Float.parseFloat(input.substring(colonLoc+1,input.length()));
+          println("Y-Range: "+y1+ "  : "+y2);
+          ps.setYRange(y1,y2);
+          println("Input Success");
+        }
       }
     }
     catch (java.lang.NumberFormatException e){
@@ -1341,9 +1571,9 @@ class PointStack{
     int count = 1;
     
     while (pn != null){
-      println("toArrayList loop: "+ count++);
+      //println("toArrayList loop: "+ count++);
       tp = pn.getPoint();
-      println("adding point: "+tp.getX()+"'"+tp.getY());
+      //println("adding point: "+tp.getX()+"'"+tp.getY());
       ret.add(tp);
       pn = pn.getNext();
     }
