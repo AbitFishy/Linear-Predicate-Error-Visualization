@@ -11,6 +11,7 @@ color toolTextButtonPressedColor;
 ColorScreen cs;
 GraphScreen gs;
 ToolScreen  ts;
+KeyboardInput ki;
 
 PointSpace ps;
 Tester test;
@@ -19,11 +20,8 @@ ConvexHull ch;
 
 Point downMousePos;
 Point dragMousePos;
-boolean acceptKeys;
-BoxPoint textBoxPos;
-int doubleClickCount;
-String inputString;
-Point textBoxTextPos;
+
+
 
 //debuging
 int count = 5;
@@ -33,6 +31,7 @@ int count = 5;
 void setup(){
   gs = new GraphScreen(3,256,400);
   ts = new ToolScreen(20);
+  ki = new KeyboardInput();
   
   size(gs.screenSizeW(),gs.screenSizeH()+ts.getHeight()); 
   stroke(0);
@@ -55,11 +54,6 @@ void setup(){
   
   downMousePos = new Point(-1,-1);
   dragMousePos = new Point(-1,-1);
-  doubleClickCount = 0;
-  acceptKeys = false;
-  textBoxPos = new BoxPoint(-1,-1);
-  inputString = new String();
-  textBoxTextPos = new Point(-1,-1);
   
   ps.scaleAndTrans(true);
   
@@ -82,6 +76,9 @@ void draw(){
     //println("Painting point: "+point);
     cs.paintBox(ps.pointToBox(point),pointColor);
     point = ps.getNextPoint();
+  }
+  if (ki.willAcceptKeys()){
+    ki.drawKeyboardInput();
   }
 }
 
@@ -124,9 +121,9 @@ void mouseDragged(){
 
 void mouseReleased(){
   if (ts.isWaitingForInput()){
-    if (doubleClickCount++ == 3){
+    if (ki.doubleClickCount++ == 3){
       ts.cancelInput();
-      doubleClickCount = 0;
+      ki.doubleClickCount = 0;
     }
   }
   else if (downMousePos.getX() == mouseX && downMousePos.getY() == mouseY){
@@ -187,27 +184,8 @@ void mouseWheel(MouseEvent event){
 }
 
 void keyTyped(){
-  if (acceptKeys){
-    switch (key){
-      case ENTER:
-      case RETURN:
-        ts.sendInput(inputString);
-        inputKeyboard(false,0,0);
-        inputString = new String();
-        break;
-      case ESC:
-      case BACKSPACE:
-        ts.cancelInput();
-        break;
-      default:
-        inputString += key;
-        float x = textBoxTextPos.getX();
-        float y = textBoxTextPos.getY();
-        text(key,x,y);
-        x += 7;
-        textBoxTextPos.setX(x);
-        break;
-    }
+  if (ki.willAcceptKeys()){
+    ki.inputKey();
   }  
 }
     
@@ -254,7 +232,7 @@ class Point{
     return new Point(m_X-p.getX(),m_Y-p.getY());
   }
   
-  public Point mult(float s){
+  public Point mul(float s){
     return new Point(m_X*s,m_Y*s);
   }
   
@@ -948,6 +926,17 @@ class PointSpace{
     return (pt == null) ? null : new Point( (pt.getX()/m_scale) + m_transX, (pt.getY()/m_scale) +m_transY);
   }
   
+  public void scalePoints(float s){
+    for (int i = 0; i <m_pts.size();i++){
+      m_pts.set(i,m_pts.get(i).mul(s));
+    }
+  }
+  public void translatePoints(float x, float y){
+    for (int i = 0; i <m_pts.size();i++){
+      m_pts.set(i,m_pts.get(i).add(new Point(x,y)));
+    }
+  }
+  
 }
 
 class Tester{
@@ -1171,12 +1160,12 @@ class ToolScreen{
   
   private void scaleButtonInput(){
     //String input = getTextInput(scaleButtonArea[0].getX(),scaleButtonArea[0].getY()-inputOffset);
-    inputKeyboard(true,scaleButtonArea[0].getX(),scaleButtonArea[0].getY()-inputOffset);
+    ki.inputKeyboard(true,scaleButtonArea[0].getX(),scaleButtonArea[0].getY()-inputOffset);
     waitForScaleInput = true;
   }
   private void transButtonInput(){
     //String input = getTextInput(transButtonArea[0].getX(),transButtonArea[0[].getY()-inputOffset);
-    inputKeyboard(true,transButtonArea[0].getX(),transButtonArea[0].getY()-inputOffset);
+    ki.inputKeyboard(true,transButtonArea[0].getX(),transButtonArea[0].getY()-inputOffset);
     waitForTransInput = true;
   }
   
@@ -1192,11 +1181,45 @@ class ToolScreen{
   public void cancelInput(){
     waitForScaleInput = false;
     waitForTransInput = false;
-    inputKeyboard(false,0,0);
+    ki.inputKeyboard(false,0,0);
   }
   
   public void sendInput(String input){
-    println(input);
+    println("Input: " +input);
+    try{    
+      if (waitForScaleInput){
+        float scaling = Float.parseFloat(input);
+        println("Scaling by: "+scaling);
+        ps.scalePoints(scaling);
+        println("Input Success");
+      }
+      else if (waitForTransInput){
+        float xTran;
+        float yTran;
+        int commaLoc = input.indexOf(',');
+        if (commaLoc == -1){
+          xTran = Float.parseFloat(input);
+          println("Translate x: "+xTran);
+          ps.translatePoints(xTran,0);
+          println("Input Success");
+        }
+        else{
+          xTran = Float.parseFloat(input.substring(0,commaLoc));
+          yTran = Float.parseFloat(input.substring(commaLoc+1,input.length()));
+          println("Translate x: "+xTran+ "  y: "+yTran);
+          ps.translatePoints(xTran,yTran);
+          println("Input Success");
+        }
+          
+      }
+    }
+    catch (java.lang.NumberFormatException e){
+      println("Bad input");
+    }
+    finally {
+      
+    }
+    
     cancelInput();
   }
   
@@ -1359,26 +1382,82 @@ public boolean isPointInBox(int pointX, int pointY, int rectX, int rectY, int w,
   }
 }
 
-public void inputKeyboard(boolean yes, float x, float y){
-  if (yes){
-    acceptKeys = true;
-    //textInputPos.setX((int)x);
-    //textInputPos.setY((int)y);
+class KeyboardInput{ //a sloppily constructed class
+  private float m_x;
+  private float m_y;
+  String inputString;
+  Point textPos;
+  boolean acceptKeys;
+  BoxPoint textBoxPos;
+  int doubleClickCount;
+  
+  public KeyboardInput(){
+    acceptKeys = false;
+    textBoxPos = new BoxPoint(-1,-1);
+    inputString = new String();
+    textPos = new Point(-1,-1);
+    doubleClickCount = 0;
+  }
+  
+  public void inputKeyboard(boolean yes, float x, float y){
+    if (yes){
+      acceptKeys = true;
+      //textInputPos.setX((int)x);
+      //textInputPos.setY((int)y);
+      stroke(0,0,0);
+      fill(255,255,255);
+      rect(x,y, 100, 15);
+      textPos.setX(x+3);
+      textPos.setY(y+12);
+      m_x = x;
+      m_y = y;
+    }
+    else{
+      acceptKeys = false;
+      //textInputPos.setX(-1);
+      //textInputPos.setY(-1);
+      textPos.setY(-1);
+      textPos.setX(-1);
+      inputString = new String();
+      test.setPoints(ps.getPoints());
+      cs.colorize();
+    } //when will the box get over written?
+  }
+  
+  public boolean willAcceptKeys(){
+    return acceptKeys;
+  }
+
+  public void drawKeyboardInput(){
     stroke(0,0,0);
     fill(255,255,255);
-    rect(x,y, 100, 15);
-    textBoxTextPos.setX(x+3);
-    textBoxTextPos.setY(y+12);
+    rect(m_x,m_y, 100, 15);
+    fill(textColor);
+    text(inputString,m_x+3,textPos.getY());
   }
-  else{
-    acceptKeys = false;
-    //textInputPos.setX(-1);
-    //textInputPos.setY(-1);
-    textBoxTextPos.setY(-1);
-    textBoxTextPos.setX(-1);
-    inputString = new String();
-    test.setPoints(ps.getPoints());
-    cs.colorize();
-  } //when will the box get over written?
+  
+  public void inputKey(){
+    switch (key){
+      case ENTER:
+      case RETURN:
+        ts.sendInput(inputString);
+        inputKeyboard(false,0,0);
+        inputString = new String();
+        break;
+      case ESC:
+      case BACKSPACE:
+        ts.cancelInput();
+        break;
+      default:
+        inputString += key;
+        float x = textPos.getX();
+        float y = textPos.getY();
+        text(key,x,y);
+        x += 7;
+        textPos.setX(x);
+        break;
+    }
+  }
 }
+  
   
