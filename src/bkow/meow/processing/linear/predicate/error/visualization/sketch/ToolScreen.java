@@ -42,10 +42,10 @@ public class ToolScreen {
     boolean waitForXRangInput;
     boolean waitForYRangInput;
     
-    public ToolScreen(int h){
+    public ToolScreen(int h, GraphScreen gs){
       m_height = h;
       labelOffset = 15;
-      labelHeight = GlobalVar.gs().screenSizeH() +labelOffset;
+      labelHeight = gs.screenSizeH() +labelOffset;
       labelStart = 5;
       mouseLabel = labelStart;
       distLabel  = mouseLabel   + 200;

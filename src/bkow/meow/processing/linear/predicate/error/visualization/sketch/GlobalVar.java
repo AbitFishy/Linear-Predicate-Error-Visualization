@@ -23,7 +23,7 @@ public class GlobalVar {
     private static Color toolTextButtonColor;
     private static Color toolTextButtonPressedColor;
     
-    public static void setVars(PApplet pproc, PointSpace pps, ColorScreen pcs, GraphScreen pgs, ToolScreen pts, KeyboardInput pki, Tester ptest,
+    public static void setVars(PApplet pproc, PointSpace pps, GraphScreen pgs, ColorScreen pcs, ToolScreen pts, KeyboardInput pki, Tester ptest,
 	    ConvexHull pch, DrawLine pdl){
 	if (proc == null){
 	    proc = pproc;

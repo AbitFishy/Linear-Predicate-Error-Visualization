@@ -5,9 +5,9 @@ public class ColorScreen {
     //private PointSpace m_pts;
     private Color[][] m_screen;
 
-    public ColorScreen(){
+    public ColorScreen(GraphScreen gs){
       //m_pts = p;
-      m_screen = new Color[GlobalVar.gs().getWidth()][GlobalVar.gs().getHeight()];  
+      m_screen = new Color[gs.getWidth()][gs.getHeight()];  
     }
     
     //public void addPoint(Point p){

@@ -23,7 +23,8 @@ public class LinearPredicate extends PApplet{
     public void setup() {
 	//proc = this;
 	
-	GlobalVar.setVars(this, new PointSpace(), new ColorScreen(), new GraphScreen(3,256,400), new ToolScreen(20), new KeyboardInput(), new Tester(), new ConvexHull(), new DrawLine());
+	GraphScreen gs = new GraphScreen(3,256,400);
+	GlobalVar.setVars(this, new PointSpace(),gs, new ColorScreen(gs), new ToolScreen(20, gs), new KeyboardInput(), new Tester(), new ConvexHull(), new DrawLine());
 
 	  
 	size(GlobalVar.gs().screenSizeW(),GlobalVar.gs().screenSizeH()+GlobalVar.ts().getHeight()); 
