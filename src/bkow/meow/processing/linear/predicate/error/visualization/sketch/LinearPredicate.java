@@ -14,7 +14,7 @@ public class LinearPredicate extends PApplet{
    // PApplet proc;
 
     public static void main(String args[]) {
-	PApplet.main(new String[] { "--present", "bkow.meow.processing.linear.predicate.error.visualization.sketch.LinearPredicate" });
+	PApplet.main(new String[] {/* "--present",*/ "bkow.meow.processing.linear.predicate.error.visualization.sketch.LinearPredicate" });
     }
     
     private Point downMousePos;
@@ -30,14 +30,23 @@ public class LinearPredicate extends PApplet{
 	size(GlobalVar.gs().screenSizeW(),GlobalVar.gs().screenSizeH()+GlobalVar.ts().getHeight()); 
 	stroke(0);
 	background(128);
-	  
+	  /*
 	Color above   = new Color(Color.color(128,255,255));
 	Color linear  = new Color(Color.color(255,0,0));
-	Color below   = new Color(Color.color(255,165,0));
+	Color below   = new Color(Color.color(0,165,0));
 	Color pointColor = new Color(Color.color(0,0,255));
 	Color lineColor = new Color(Color.color(0,0,0));
 	Color textColor = new Color(Color.color(0,0,0));
 	Color toolTextBGColor = new Color(Color.color(0,0,255));
+	*/
+	Color above  		= new Color(0xFF80FFFF);
+	Color linear 		= new Color(0xFFFF0000);
+	Color below  		= new Color(0xFF00A500);
+	Color pointColor	= new Color(0xFF0000FF);
+	Color lineColor 	= new Color(0xFF000000);
+	Color textColor 	= new Color(0xFF000000);
+	Color toolTextBGColor 	= new Color(0xFF0000FF);
+	
 	Color toolTextButtonColor = new Color(0x9E4600FF);
 	Color toolTextButtonPressedColor = new Color(0xF4460022);
 	
@@ -55,7 +64,7 @@ public class LinearPredicate extends PApplet{
 
     public void draw() {
 	GlobalVar.ts().drawLabels();
-	  GlobalVar.cs().draw();
+	GlobalVar.cs().draw();
 	  
 	  //drawlines
 	  if (GlobalVar.ps().getNumPts() == 2){
