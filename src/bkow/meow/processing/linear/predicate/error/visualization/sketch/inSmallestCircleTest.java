@@ -6,8 +6,8 @@ public class inSmallestCircleTest implements OrientTest {
 
     ArrayList<Point> m_pts;
     
-    float m_center;
-    float m_radius;
+    double m_center;
+    double m_radius;
     
     public inSmallestCircleTest(ArrayList<Point> pts){
       m_pts = minimumEnclosingBall(pts);

@@ -5,11 +5,11 @@ import java.util.ArrayList;
 public class PointSpace {
     ArrayList<Point> m_pts;
     
-    float m_transX; //translation and scaling from the screen space to point space
-    float m_transY;
-    float m_scale;
-    float m_distBTWBoxes;
-    float m_scaleFactor;
+    double m_transX; //translation and scaling from the screen space to point space
+    double m_transY;
+    double m_scale;
+    double m_distBTWBoxes;
+    double m_scaleFactor;
     
     int m_index;
     boolean scaleAndTrans;
@@ -27,13 +27,26 @@ public class PointSpace {
     }
     
     public void addPoint(Point p){//Screen to World
-      float sx = p.getX();
-      float sy = p.getY();
+      double sx = p.getX();
+      double sy = p.getY();
+      
+      if (Double.isInfinite(sx)){
+	  GlobalVar.proc().println("Infinite Point added X");
+      }
+      if (Double.isInfinite(sy)){
+	  GlobalVar.proc().println("Infinite Point added Y");
+      }
+       if (Double.isNaN(sx)){
+	  GlobalVar.proc().println("NAN Point added X");
+      }
+      if (Double.isNaN(sy)){
+	  GlobalVar.proc().println("NAN Point added Y");
+      }
       
       //px += m_transX;
       //py += m_transY;
-      float wx = sx/m_scale + m_transX;
-      float wy = sy/m_scale + m_transY;
+      double wx = sx/m_scale + m_transX;
+      double wy = sy/m_scale + m_transY;
       
       p.setX(wx);
       p.setY(wy);
@@ -42,10 +55,10 @@ public class PointSpace {
     }
     
     public void addPoint(BoxPoint p){
-      float sx = p.getX();
-      float sy = p.getY();
-      float wx = sx/m_scale + m_transX;
-      float wy = sy/m_scale + m_transY;
+      double sx = p.getX();
+      double sy = p.getY();
+      double wx = sx/m_scale + m_transX;
+      double wy = sy/m_scale + m_transY;
 
       m_pts.add(new Point(wx,wy));
     }
@@ -71,12 +84,12 @@ public class PointSpace {
     }
       
     
-    public void screenTrans(float x, float y){
+    public void screenTrans(double x, double y){
       m_transX += x * (1/m_scale);
       m_transY += y * (1/m_scale); 
     }
     
-    public void screenScale( float s){
+    public void screenScale( double s){
       
       Point A = boxToPoint(new BoxPoint(0,0));
       Point B = boxToPoint(new BoxPoint(GlobalVar.gs().getWidth()-1,GlobalVar.gs().getHeight()-1));
@@ -103,7 +116,7 @@ public class PointSpace {
         Point len = oldLen.div( (m_scaleFactor));
         GlobalVar.proc().println("oldlen: "+oldLen+" len: "+len);
         
-        float divider = (float) ((s < 1) ? .5 : 2);
+        double divider = (double) ((s < 1) ? .5 : 2);
         Point botLeft= mouse.sub(len.div(divider));
         GlobalVar.proc().println("len.div: " + len.div(divider) + " botLeft: " + botLeft);
         
@@ -123,11 +136,11 @@ public class PointSpace {
       }
     }
     
-    public void setScaleFactor(float sf){
+    public void setScaleFactor(double sf){
       m_scaleFactor = sf;
     }
     
-    public float getScaleFactor(){
+    public double getScaleFactor(){
       return m_scaleFactor;
     }
     
@@ -153,11 +166,11 @@ public class PointSpace {
       return m_pts.size();
     }
     
-    public float getDistBTWBoxes(){
+    public double getDistBTWBoxes(){
       return m_distBTWBoxes;
     }
     
-    public void setDistBTWBoxes(float dist){
+    public void setDistBTWBoxes(double dist){
       //float transX = m_transX;
       //float transY = m_transY;
       
@@ -170,23 +183,23 @@ public class PointSpace {
       GlobalVar.proc().println("Changed distace to: " + dist);
     }
     
-    public void setX(float x){
+    public void setX(double x){
       m_transX = x;
     }
-    public void setY(float y){
+    public void setY(double y){
       m_transY = y;
     }
     
-    public void setXRange(float x1, float x2){
+    public void setXRange(double x1, double x2){
       if (x2 <= x1){
 	  GlobalVar.proc().println("Negative x range: " + x1 + " : " +x2);
 	  return;
       }
       else{
         //float transY = m_transY;
-        float len = x2-x1;
-        float w = GlobalVar.gs().getWidth();
-        float dist = len/w;
+        double len = x2-x1;
+        double w = GlobalVar.gs().getWidth();
+        double dist = len/w;
         m_distBTWBoxes = dist;
         m_scale = 1/dist;
         m_transX = x1;
@@ -194,16 +207,16 @@ public class PointSpace {
       }
         
     }
-    public void setYRange(float y1,float y2){
+    public void setYRange(double y1,double y2){
       if (y2 <= y1){
 	  GlobalVar.proc().println("Negative y range: " + y1 + " : " +y2);
         return;
       }
       else{
-        //float transX = m_transX;
-        float len = y2-y1;
-        float w = GlobalVar.gs().getHeight();
-        float dist = len/w;
+        //double transX = m_transX;
+        double len = y2-y1;
+        double w = GlobalVar.gs().getHeight();
+        double dist = len/w;
         m_distBTWBoxes = dist;
         m_scale = 1/dist;
         m_transY = y1;
@@ -220,16 +233,16 @@ public class PointSpace {
     }
     
     public Point boxToPoint(BoxPoint pt){ //screen to world conversion
-      //return new Point(float(pt.getX()), float( pt.getY()));
+      //return new Point(double(pt.getX()), double( pt.getY()));
       return (pt == null) ? null : new Point( (pt.getX()/m_scale) + m_transX, (pt.getY()/m_scale) +m_transY);
     }
     
-    public void scalePoints(float s){
+    public void scalePoints(double s){
       for (int i = 0; i <m_pts.size();i++){
         m_pts.set(i,m_pts.get(i).mul(s));
       }
     }
-    public void translatePoints(float x, float y){
+    public void translatePoints(double x, double y){
       for (int i = 0; i <m_pts.size();i++){
         m_pts.set(i,m_pts.get(i).add(new Point(x,y)));
       }

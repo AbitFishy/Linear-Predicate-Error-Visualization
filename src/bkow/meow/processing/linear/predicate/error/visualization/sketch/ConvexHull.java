@@ -20,8 +20,8 @@ public class ConvexHull {
 	  }
 	  public ArrayList<Point> sortByAngle(ArrayList<Point> pts){
 	    int leftmost = 0;
-	    float leastLeft = pts.get(0).getX();
-	    float t;
+	    double leastLeft = pts.get(0).getX();
+	    double t;
 	    int len = pts.size();
 	    
 	    for (int i = 0; i < len; i++){

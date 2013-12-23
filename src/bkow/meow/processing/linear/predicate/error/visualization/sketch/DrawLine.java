@@ -9,8 +9,8 @@ public class DrawLine {
     private Point m_pt2;
     private Point m_rpt1;
     private Point m_rpt2;
-    private float m_M;
-    private float m_B;
+    private double m_M;
+    private double m_B;
     
     private Point m_pt3;
     private Point m_pt4;
@@ -55,10 +55,10 @@ public class DrawLine {
     }
     
     private void findBorderInter(){
-      float h = GlobalVar.proc().height;
-      float w = GlobalVar.proc().width;
-      float tx = 0;
-      float ty  = m_M*w + m_B;
+      double h = GlobalVar.proc().height;
+      double w = GlobalVar.proc().width;
+      double tx = 0;
+      double ty  = m_M*w + m_B;
       
       if (!isVertical){
         Point tp;

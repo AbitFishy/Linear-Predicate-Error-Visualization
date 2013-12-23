@@ -260,24 +260,24 @@ public class ToolScreen {
       println("Input: " +input);
       try{    
         if (waitForScaleInput){
-          float scaling = Float.parseFloat(input);
+          double scaling = Double.parseDouble(input);
           println("Scaling by: "+scaling);
           GlobalVar.ps().scalePoints(scaling);
           println("Input Success");
         }
         else if (waitForTransInput){
-          float xTran;
-          float yTran;
+          double xTran;
+          double yTran;
           int commaLoc = input.indexOf(',');
           if (commaLoc == -1){
-            xTran = Float.parseFloat(input);
+            xTran = Double.parseDouble(input);
             println("Translate x: "+xTran);
             GlobalVar.ps().translatePoints(xTran,0);
             println("Input Success");
           }
           else{
-            xTran = Float.parseFloat(input.substring(0,commaLoc));
-            yTran = Float.parseFloat(input.substring(commaLoc+1,input.length()));
+            xTran = Double.parseDouble(input.substring(0,commaLoc));
+            yTran = Double.parseDouble(input.substring(commaLoc+1,input.length()));
             println("Translate x: "+xTran+ "  y: "+yTran);
             GlobalVar.ps().translatePoints(xTran,yTran);
             println("Input Success");
@@ -285,24 +285,24 @@ public class ToolScreen {
             
         }
         else if (waitForDist2Input){
-          float distance = Float.parseFloat(input);
+          double distance = Double.parseDouble(input);
           println("Distance btw pts now: "+ distance);
           GlobalVar.ps().setDistBTWBoxes(distance);
           println("Input Success");
         }
         else if (waitForXRangInput){
-            float x1;
-            float x2;
+            double x1;
+            double x2;
             int commaLoc = input.indexOf(',');
             if (commaLoc == -1){
-              x1 = Float.parseFloat(input);
+              x1 = Double.parseDouble(input);
               println("X: "+x1);
               GlobalVar.ps().setX(x1);
               println("Input Success");
             }
             else{
-        	x1 = Float.parseFloat(input.substring(0, commaLoc));
-        	x2 = Float.parseFloat(input.substring(commaLoc+1,input.length()));
+        	x1 = Double.parseDouble(input.substring(0, commaLoc));
+        	x2 = Double.parseDouble(input.substring(commaLoc+1,input.length()));
         	println("X range: " + x1 + " - " + x2);
         	GlobalVar.ps().setXRange(x1,x2);
         	println("Input Success");
@@ -310,18 +310,18 @@ public class ToolScreen {
             }
         }
         else if (waitForYRangInput){
-          float y1;
-          float y2;
+          double y1;
+          double y2;
           int commaLoc = input.indexOf(',');
           if (commaLoc == -1){
-              y1 = Float.parseFloat(input);
+              y1 = Double.parseDouble(input);
               println("Y: "+y1);
               GlobalVar.ps().setY(y1);
               println("Input Success");
           }
           else{
-                y1 = Float.parseFloat(input.substring(0, commaLoc));
-          	y2 = Float.parseFloat(input.substring(commaLoc+1,input.length()));
+                y1 = Double.parseDouble(input.substring(0, commaLoc));
+          	y2 = Double.parseDouble(input.substring(commaLoc+1,input.length()));
           	println("Y range: " + y1 + " - " + y2);
           	GlobalVar.ps().setYRange(y1,y2);
           	println("Input Success");
@@ -338,14 +338,14 @@ public class ToolScreen {
       cancelInput();
     }
     
-    private void rect(float x,float y,float w,float h){
-	GlobalVar.proc().rect(x,y,w,h);
+    private void rect(double x,double y,double w,double h){
+	GlobalVar.proc().rect((float)x,(float)y,(float)w,(float)h);
     }
     private void println(String s){
 	GlobalVar.proc().println(s);
     }
-    private void text(String s, float x, float y){
-	GlobalVar.proc().text(s,x,y);
+    private void text(String s, double x, double y){
+	GlobalVar.proc().text(s,(float)x,(float)y);
     }
     
 }

@@ -3,8 +3,8 @@ package bkow.meow.processing.linear.predicate.error.visualization.sketch;
 import processing.core.PApplet;
 
 public class KeyboardInput {
-    private float m_x;
-    private float m_y;
+    private double m_x;
+    private double m_y;
     String inputString;
     Point textPos;
     boolean acceptKeys;
@@ -19,14 +19,14 @@ public class KeyboardInput {
       doubleClickCount = 0;
     }
     
-    public void inputKeyboard(boolean yes, float x, float y){
+    public void inputKeyboard(boolean yes, double x, double y){
       if (yes){
         acceptKeys = true;
         //textInputPos.setX((int)x);
         //textInputPos.setY((int)y);
         GlobalVar.proc().stroke(0,0,0);
         GlobalVar.proc().fill(255,255,255);
-        GlobalVar.proc().rect(x,y, 100, 15);
+        GlobalVar.proc().rect((float)x,(float)y, 100, 15);
         textPos.setX(x+3);
         textPos.setY(y+12);
         m_x = x;
@@ -51,9 +51,9 @@ public class KeyboardInput {
     public void drawKeyboardInput(){
 	GlobalVar.proc().stroke(0,0,0);
 	GlobalVar.proc().fill(255,255,255);
-	GlobalVar.proc().rect(m_x,m_y, 100, 15);
+	GlobalVar.proc().rect((float)m_x,(float)m_y, 100, 15);
 	GlobalVar.proc().fill(GlobalVar.textColor().color());
-	GlobalVar.proc().text(inputString,m_x+3,textPos.getY());
+	GlobalVar.proc().text(inputString,(float)m_x+3,(float)textPos.getY());
     }
     
     public void inputKey(){
@@ -70,8 +70,8 @@ public class KeyboardInput {
           break;
         default:
           inputString += GlobalVar.proc().key;
-          float x = textPos.getX();
-          float y = textPos.getY();
+          double x = textPos.getX();
+          double y = textPos.getY();
           //text(key,x,y);
           x += 7;
           textPos.setX(x);

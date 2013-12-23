@@ -106,8 +106,8 @@ public class LinearPredicate extends PApplet{
 	        boolean negX;
 	        boolean negY;
 	        
-	        float transX = -( mouseX - dragMousePos.getX())/ GlobalVar.gs().getBoxSize();
-	        float transY = ( mouseY - dragMousePos.getY())/ GlobalVar.gs().getBoxSize();
+	        double transX = -( mouseX - dragMousePos.getX())/ GlobalVar.gs().getBoxSize();
+	        double transY = ( mouseY - dragMousePos.getY())/ GlobalVar.gs().getBoxSize();
 	        //negX = transX < 0 ? true:false;
 	        //negY = transY < 0 ? true:false;
 	        //transX= -(transX);
@@ -177,7 +177,7 @@ public class LinearPredicate extends PApplet{
 	}
 
 	public void mouseWheel(MouseEvent event){
-	  float amount = event.getCount();
+	  double amount = event.getCount();
 	  GlobalVar.ps().screenScale(-amount);
 	  
 	  GlobalVar.test().setPoints(GlobalVar.ps().getPoints());

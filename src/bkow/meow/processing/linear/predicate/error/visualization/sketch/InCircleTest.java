@@ -23,13 +23,13 @@ public class InCircleTest implements OrientTest {
     public int testPoint(Point tp){
       if (mode){
         
-        float x = GlobalVar.proc().abs(m_p1.getX()-m_p2.getX());
-        float y = GlobalVar.proc().abs(m_p1.getY()-m_p2.getY());
-        float csq1 = x*x + y*y;
+        double x = GlobalVar.proc().abs((float) (m_p1.getX()-m_p2.getX()));
+        double y = GlobalVar.proc().abs((float) (m_p1.getY()-m_p2.getY()));
+        double csq1 = x*x + y*y;
         
-        x = GlobalVar.proc().abs(m_p1.getX()-tp.getX());
-        y = GlobalVar.proc().abs(m_p1.getY()-tp.getY());
-        float csq2 = x*x + y*y;
+        x = GlobalVar.proc().abs((float) (m_p1.getX()-tp.getX()));
+        y = GlobalVar.proc().abs((float) (m_p1.getY()-tp.getY()));
+        double csq2 = x*x + y*y;
         
         if (csq1 > csq2){
           return 1;

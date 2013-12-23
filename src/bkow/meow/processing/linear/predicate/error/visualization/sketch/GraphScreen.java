@@ -33,8 +33,8 @@ public class GraphScreen {//also flips the y-axis
     {
       int s = m_size;
       
-      int x = GlobalVar.proc().floor(pixel.getX()/s);
-      int y = m_height - GlobalVar.proc().floor(pixel.getY()/s) -1;
+      int x = GlobalVar.proc().floor((float) (pixel.getX()/s));
+      int y = m_height - GlobalVar.proc().floor((float) (pixel.getY()/s)) -1;
       
       return new BoxPoint(x,y);
     }

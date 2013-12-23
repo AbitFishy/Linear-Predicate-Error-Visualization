@@ -1,9 +1,9 @@
 package bkow.meow.processing.linear.predicate.error.visualization.sketch;
 
 public class Point {
-    private float m_X;
-    private float m_Y;
-    Point(float x, float y){
+    private double m_X;
+    private double m_Y;
+    Point(double x, double y){
 	m_X = x;
 	m_Y = y;
     }
@@ -11,17 +11,17 @@ public class Point {
 	m_X = 0;
 	m_Y = 0;
     }
-    float getX()
+    double getX()
     {
 	return m_X;
     }
-    float getY(){
+    double getY(){
 	return m_Y;
     }
-    void setX(float x){
+    void setX(double x){
 	m_X = x;
     }
-    void setY(float y){
+    void setY(double y){
 	m_Y = y;
     }
     @Override
@@ -41,11 +41,11 @@ public class Point {
 	return new Point(m_X-p.getX(),m_Y-p.getY());
     }
     
-    public Point mul(float s){
+    public Point mul(double s){
 	return new Point(m_X*s,m_Y*s);
     }
     
-    public Point div(float s){
+    public Point div(double s){
 	return new Point(m_X/s,m_Y/s);
     }
 
