@@ -291,18 +291,41 @@ public class ToolScreen {
           println("Input Success");
         }
         else if (waitForXRangInput){
-          float x1;        
-          x1 = Float.parseFloat(input);
-          println("X: "+x1);
-          GlobalVar.ps().setX(x1);
-          println("Input Success");
+            float x1;
+            float x2;
+            int commaLoc = input.indexOf(',');
+            if (commaLoc == -1){
+              x1 = Float.parseFloat(input);
+              println("X: "+x1);
+              GlobalVar.ps().setX(x1);
+              println("Input Success");
+            }
+            else{
+        	x1 = Float.parseFloat(input.substring(0, commaLoc));
+        	x2 = Float.parseFloat(input.substring(commaLoc+1,input.length()));
+        	println("X range: " + x1 + " - " + x2);
+        	GlobalVar.ps().setXRange(x1,x2);
+        	println("Input Success");
+        	
+            }
         }
         else if (waitForYRangInput){
           float y1;
-          y1 = Float.parseFloat(input);
-          println("Y: "+y1);
-          GlobalVar.ps().setY(y1);
-          println("Input Success");
+          float y2;
+          int commaLoc = input.indexOf(',');
+          if (commaLoc == -1){
+              y1 = Float.parseFloat(input);
+              println("Y: "+y1);
+              GlobalVar.ps().setY(y1);
+              println("Input Success");
+          }
+          else{
+                y1 = Float.parseFloat(input.substring(0, commaLoc));
+          	y2 = Float.parseFloat(input.substring(commaLoc+1,input.length()));
+          	println("Y range: " + y1 + " - " + y2);
+          	GlobalVar.ps().setYRange(y1,y2);
+          	println("Input Success");
+          }
         }
       }
       catch (java.lang.NumberFormatException e){
