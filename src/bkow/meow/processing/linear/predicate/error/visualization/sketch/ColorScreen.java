@@ -72,7 +72,7 @@ public class ColorScreen {
         for (int j = 0; j < GlobalVar.gs().getHeight(); j++){
           c = m_screen[i][j];
           BoxPoint p = GlobalVar.ps().pointToBox(GlobalVar.ps().boxToPoint(new BoxPoint(i,j)));
-          paintBox(p.getX(),p.getY(),c);
+          paintBox(((int)p.getX()),(int)(p.getY()),c);
         }
       }
     }

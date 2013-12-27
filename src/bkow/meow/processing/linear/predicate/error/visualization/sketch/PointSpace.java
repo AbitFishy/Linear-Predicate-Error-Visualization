@@ -225,7 +225,7 @@ public class PointSpace {
     }
     
     public BoxPoint pointToBox(Point pt){ //world to screen conversion
-      return (pt == null) ? null : new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
+      return (pt == null) ? null : new BoxPoint( (long)(m_scale*(pt.getX()-m_transX)), (long)(m_scale*(pt.getY()-m_transY)));
       //
       //testing
       //BoxPoint sp = new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
