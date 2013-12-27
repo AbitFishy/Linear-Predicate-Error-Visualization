@@ -1,9 +1,9 @@
 package bkow.meow.processing.linear.predicate.error.visualization.sketch;
 
 public class BoxPoint {
-    private int m_X;
-    private int m_Y;
-    public BoxPoint(int x, int y){
+    private long m_X;
+    private long m_Y;
+    public BoxPoint(long x, long y){
       m_X = x;
       m_Y = y;
     }
@@ -11,17 +11,17 @@ public class BoxPoint {
       m_X = 0;
       m_Y = 0;
     }
-    int getX()
+    long getX()
     {
       return m_X;
     }
-    int getY(){
+    long getY(){
       return m_Y;
     }
-    void setX(int x){
+    void setX(long x){
       m_X = x;
     }
-    void setY(int y){
+    void setY(long y){
       m_Y = y;
     }
     @Override
@@ -41,11 +41,11 @@ public class BoxPoint {
       return new BoxPoint(m_X-p.getX(),m_Y-p.getY());
     }
     
-    public BoxPoint mul(int s){
+    public BoxPoint mul(long s){
       return new BoxPoint(m_X*s,m_Y*s);
     }
     
-    public BoxPoint div(int s){
+    public BoxPoint div(long s){
       return new BoxPoint(m_X/s,m_Y/s);
     }
 

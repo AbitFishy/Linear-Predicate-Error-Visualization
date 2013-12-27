@@ -43,8 +43,8 @@ public class GraphScreen {//also flips the y-axis
     {
       int s = m_size;
       
-      int x = pixel.getX()/s;
-      int y = m_height - pixel.getY()/s -1;
+      long x = pixel.getX()/s;
+      long y = m_height - pixel.getY()/s -1;
       
       return new BoxPoint(x,y);
     }
@@ -56,8 +56,8 @@ public class GraphScreen {//also flips the y-axis
     }
     
     public BoxPoint[] boxToPixels(BoxPoint box){
-      int s = m_size;
-      int h = m_height;
+      long s = m_size;
+      long h = m_height;
       
       BoxPoint[] range = new BoxPoint[2];
    
