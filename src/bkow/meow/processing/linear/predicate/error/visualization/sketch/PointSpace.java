@@ -1,26 +1,27 @@
 package bkow.meow.processing.linear.predicate.error.visualization.sketch;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 public class PointSpace {
     ArrayList<Point> m_pts;
     
-    double m_transX; //translation and scaling from the screen space to point space
-    double m_transY;
-    double m_scale;
-    double m_distBTWBoxes;
-    double m_scaleFactor;
+    BigDecimal m_transX; //translation and scaling from the screen space to point space
+    BigDecimal m_transY;
+    BigDecimal m_scale;
+    BigDecimal m_distBTWBoxes;
+    BigDecimal m_scaleFactor;
     
     int m_index;
     boolean scaleAndTrans;
     
     public PointSpace(){
       m_pts = new ArrayList<Point>();
-      m_transX = 0;
-      m_transY = 0;
-      m_scale  = 1;
-      m_distBTWBoxes = 1;
-      m_scaleFactor = 2;
+      m_transX =  new BigDecimal(0);
+      m_transY = new BigDecimal(0);
+      m_scale  = new BigDecimal(1);
+      m_distBTWBoxes = new BigDecimal(1);
+      m_scaleFactor = new BigDecimal( 2);
       
       m_index  = 0;
       scaleAndTrans = false;
@@ -45,11 +46,11 @@ public class PointSpace {
       
       //px += m_transX;
       //py += m_transY;
-      double wx = sx/m_scale + m_transX;
-      double wy = sy/m_scale + m_transY;
+      BigDecimal wx = new BigDecimal(sx).divide(m_scale, BigDecimal.ROUND_DOWN).add( m_transX);
+      BigDecimal wy = new BigDecimal(sy).divide(m_scale, BigDecimal.ROUND_DOWN).add(m_transY);
       
-      p.setX(wx);
-      p.setY(wy);
+      p.setX(wx.doubleValue());
+      p.setY(wy.doubleValue());
       
       m_pts.add(p);
     }
@@ -57,10 +58,10 @@ public class PointSpace {
     public void addPoint(BoxPoint p){
       double sx = p.getX();
       double sy = p.getY();
-      double wx = sx/m_scale + m_transX;
-      double wy = sy/m_scale + m_transY;
+      BigDecimal wx = new BigDecimal(sx).divide(m_scale, BigDecimal.ROUND_DOWN).add( m_transX);
+      BigDecimal wy = new BigDecimal(sy).divide(m_scale, BigDecimal.ROUND_DOWN).add(m_transY);
 
-      m_pts.add(new Point(wx,wy));
+      m_pts.add(new Point(wx.doubleValue(),wy.doubleValue()));
     }
     
     public boolean removePoint(Point p){ //world coordinates
@@ -85,28 +86,33 @@ public class PointSpace {
       
     
     public void screenTrans(double x, double y){
-      m_transX += x * (1/m_scale);
-      m_transY += y * (1/m_scale); 
+      screenTrans(new BigDecimal(x), new BigDecimal(y));
     }
     
-    public void screenScale( double s){
+    public void screenTrans(BigDecimal x, BigDecimal y){
+	 m_transX = m_transX.add(x.divide (BigDecimal.ONE.divide(m_scale, BigDecimal.ROUND_DOWN)));
+	 m_transY = m_transY.add(y.divide (BigDecimal.ONE.divide(m_scale, BigDecimal.ROUND_DOWN)));
+    }
+    
+    public void screenScale( BigDecimal s){
       
       Point A = boxToPoint(new BoxPoint(0,0));
       Point B = boxToPoint(new BoxPoint(GlobalVar.gs().getWidth()-1,GlobalVar.gs().getHeight()-1));
       Point mouse =  boxToPoint(GlobalVar.gs().pixelToBox(new Point (GlobalVar.proc().mouseX,GlobalVar.proc().mouseY)));
       
-      if (s >0){
-        s *= m_scaleFactor;
+      if (s.compareTo(BigDecimal.ZERO) > 0){
+        s = s.multiply(m_scaleFactor);
       }
-      else if(s<0){
-        s = -1/(s*m_scaleFactor);
+      else if(s.compareTo(BigDecimal.ZERO) < 0){
+        //s = -1/(s*m_scaleFactor);
+	  s = BigDecimal.ZERO.subtract(BigDecimal.ONE).divide(s.multiply(m_scaleFactor));
       }
       else{
-        s = 1;
+        s = BigDecimal.ONE;
       }
       
-      m_scale *= s;
-      m_distBTWBoxes = 1/m_scale;
+      m_scale = s.multiply(m_scale);
+      m_distBTWBoxes = BigDecimal.ONE.divide(m_scale);
       GlobalVar.proc().println("Scaling by: " + s + ", Scale: " + m_scale);
       
       if (scaleAndTrans){  
@@ -116,7 +122,7 @@ public class PointSpace {
         Point len = oldLen.div( (m_scaleFactor));
         GlobalVar.proc().println("oldlen: "+oldLen+" len: "+len);
         
-        double divider = (double) ((s < 1) ? .5 : 2);
+        BigDecimal divider = new BigDecimal ((s.compareTo(BigDecimal.ONE) < 0) ? .5 : 2);
         Point botLeft= mouse.sub(len.div(divider));
         GlobalVar.proc().println("len.div: " + len.div(divider) + " botLeft: " + botLeft);
         
@@ -225,11 +231,9 @@ public class PointSpace {
     }
     
     public BoxPoint pointToBox(Point pt){ //world to screen conversion
-      return (pt == null) ? null : new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
-      //
-      //testing
-      //BoxPoint sp = new BoxPoint( (int)(m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
-
+	//GlobalVar.proc().println("Point to box " + pt + " scale " + m_scale + " transX " + m_transX + " transY " + m_scale);
+	return (pt == null) ? null : new BoxPoint( (int) (m_scale*(pt.getX()-m_transX)), (int)(m_scale*(pt.getY()-m_transY)));
+     
     }
     
     public Point boxToPoint(BoxPoint pt){ //screen to world conversion

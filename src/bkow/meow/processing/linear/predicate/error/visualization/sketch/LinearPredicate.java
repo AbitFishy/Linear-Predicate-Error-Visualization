@@ -77,9 +77,9 @@ public class LinearPredicate extends PApplet{
 	  GlobalVar.ps().resetQueue();
 	  Point point = GlobalVar.ps().getNextPoint();
 	  while (point != null){
-	    //println("Painting point: "+point);
-	    GlobalVar.cs().paintBox(GlobalVar.ps().pointToBox(point),GlobalVar.pointColor());
-	    point = GlobalVar.ps().getNextPoint();
+	      println("Painting point: "+point);
+	      GlobalVar.cs().paintBox(GlobalVar.ps().pointToBox(point),GlobalVar.pointColor());
+	      point = GlobalVar.ps().getNextPoint();
 	  }
 	  if (GlobalVar.ki().willAcceptKeys()){
 	    GlobalVar.ki().drawKeyboardInput();
@@ -87,50 +87,50 @@ public class LinearPredicate extends PApplet{
     }
     
     public void mousePressed(){
-	  downMousePos.setX(mouseX);
-	  downMousePos.setY(mouseY);
-	  if (mouseY < GlobalVar.gs().screenSizeH()){
+	downMousePos.setX(mouseX);
+	downMousePos.setY(mouseY);
+	if (mouseY < GlobalVar.gs().screenSizeH()){
 	    dragMousePos.setX(mouseX);
 	    dragMousePos.setY(mouseY);
-	  }
-	  else{
+	}
+	else{
 	    if (GlobalVar.ts().isButtonPressed()){
-	      //draw();
+		//draw();
 	    }
-	  }
 	}
+    }
 
-	public void mouseDragged(){
-	  if (mouseButton == LEFT){
-	    if (mouseY < GlobalVar.gs().screenSizeH()){//moved and in graph area
-	        boolean negX;
-	        boolean negY;
-	        
-	        double transX = -( mouseX - dragMousePos.getX())/ GlobalVar.gs().getBoxSize();
-	        double transY = ( mouseY - dragMousePos.getY())/ GlobalVar.gs().getBoxSize();
-	        //negX = transX < 0 ? true:false;
-	        //negY = transY < 0 ? true:false;
-	        //transX= -(transX);
-	        //transY = (transY);
-	        //transX = negX == true ? transX-1 : transX;
-	        //transY = negY == true ? transY+1 : transY;
-	        
-	        dragMousePos.setX(mouseX);
-	        dragMousePos.setY(mouseY);
-	        GlobalVar.ps().screenTrans(transX,transY);
-	     }
-	  }
-	}
+    public void mouseDragged(){
+      if (mouseButton == LEFT){
+        if (mouseY < GlobalVar.gs().screenSizeH()){//moved and in graph area
+            boolean negX;
+            boolean negY;
+    	        
+            double transX = -( mouseX - dragMousePos.getX())/ GlobalVar.gs().getBoxSize();
+            double transY = ( mouseY - dragMousePos.getY())/ GlobalVar.gs().getBoxSize();
+            //negX = transX < 0 ? true:false;
+            //negY = transY < 0 ? true:false;
+            //transX= -(transX);
+            //transY = (transY);
+            //transX = negX == true ? transX-1 : transX;
+            //transY = negY == true ? transY+1 : transY;
+    	        
+            dragMousePos.setX(mouseX);
+            dragMousePos.setY(mouseY);
+            GlobalVar.ps().screenTrans(transX,transY);
+         }
+      }
+    }
 	     
 
-	public void mouseReleased(){
-	  if (GlobalVar.ts().isWaitingForInput()){
+    public void mouseReleased(){
+	if (GlobalVar.ts().isWaitingForInput()){
 	    if (GlobalVar.ki().doubleClickCount++ == 3){
-	      GlobalVar.ts().cancelInput();
-	      GlobalVar.ki().doubleClickCount = 0;
+		GlobalVar.ts().cancelInput();
+		GlobalVar.ki().doubleClickCount = 0;
 	    }
-	  }
-	  else if (downMousePos.getX() == mouseX && downMousePos.getY() == mouseY){
+	}
+	else if (downMousePos.getX() == mouseX && downMousePos.getY() == mouseY){
 	    //only do this when clicked in graph area.
 	    if (mouseY < GlobalVar.gs().screenSizeH()){
 	      BoxPoint pt = GlobalVar.gs().pixelToBox(new BoxPoint(mouseX,mouseY));
@@ -174,22 +174,22 @@ public class LinearPredicate extends PApplet{
 	  downMousePos.setY(-1);
 	  dragMousePos.setX(-1);
 	  dragMousePos.setY(-1);
-	}
+    }
 
-	public void mouseWheel(MouseEvent event){
-	  double amount = event.getCount();
-	  GlobalVar.ps().screenScale(-amount);
+    public void mouseWheel(MouseEvent event){
+	double amount = event.getCount();
+	GlobalVar.ps().screenScale(-amount);
 	  
-	  GlobalVar.test().setPoints(GlobalVar.ps().getPoints());
-	  println("Points set after scroll");
-	  GlobalVar.cs().colorize();
-	  println("Colorized after scroll");
+	GlobalVar.test().setPoints(GlobalVar.ps().getPoints());
+	println("Points set after scroll");
+	GlobalVar.cs().colorize();
+	println("Colorized after scroll");
 	  
-	}
+    }
 
-	public void keyTyped(){
-	  if (GlobalVar.ki().willAcceptKeys()){
+    public void keyTyped(){
+	if (GlobalVar.ki().willAcceptKeys()){
 	    GlobalVar.ki().inputKey();
-	  }  
-	}
+	}  
+    }
 }
